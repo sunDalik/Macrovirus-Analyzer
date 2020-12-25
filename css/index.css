@@ -5,7 +5,7 @@
 
 html {
     font-size: 16px;
-    font-family: 'Robot', sans-serif;
+    font-family: 'Roboto', sans-serif;
     background-color: #fcfff6;
 }
 
@@ -85,4 +85,8 @@ html {
 
 .hidden {
     display: none;
+}
+
+.code {
+    font-family: 'Consolas', monospace;
 }
