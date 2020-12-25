@@ -9,12 +9,26 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
 </head>
 <body>
-<div class="file-input" id="fake-file-selector">
-    <span class="file-input-text" id="filename-display">Choose file...</span>
-    <span class="file-input-button">Browse</span>
-    <input class="real-file-input" type="file" id="file-selector" multiple accept=".docm, .xlsm">
+<div class="outer-file-input">
+    <div class="file-input" id="fake-file-selector">
+        <span class="file-input-text" id="filename-display">Choose file...</span>
+        <span class="file-input-button">Browse</span>
+        <input class="real-file-input" type="file" id="file-selector" multiple accept=".docm, .xlsm">
+    </div>
 </div>
-<div id="file-contents">
+<div class="main-table hidden">
+
+    <div class="tab-selector-table">
+        <span class="tab-selector" data-tab="tab1">Analysis</span>
+        <span class="tab-selector" data-tab="tab2">Source Code</span>
+    </div>
+
+    <div id="tab1" class="tab-contents">
+
+    </div>
+    <div id="tab2" class="tab-contents">
+
+    </div>
 </div>
 </body>
 <script src="js/jszip.min.js"></script>

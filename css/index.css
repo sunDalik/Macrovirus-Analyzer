@@ -1,3 +1,8 @@
+:root {
+    --border-radius: 8px;
+    --border-size: 1px;
+}
+
 html {
     font-size: 16px;
     font-family: 'Robot', sans-serif;
@@ -8,25 +13,32 @@ html {
     display: none;
 }
 
-.file-input {
+.outer-file-input {
     display: flex;
     flex-direction: row;
     justify-content: center;
-    margin-top: 120px;
+}
+
+.file-input {
+    display: inline-flex;
+    flex-direction: row;
+    justify-content: center;
+    margin-top: 200px;
     cursor: pointer;
+    transition: margin-top 0.3s ease-out;
 }
 
 .file-input-button {
-    border-radius: 0 8px 8px 0;
+    border-radius: 0 var(--border-radius) var(--border-radius) 0;
     background-color: #91CF0F;
     font-weight: bold;
     color: white;
 }
 
 .file-input-text {
-    border: 2px solid;
+    border: var(--border-size) solid black;
     background-color: white;
-    border-radius: 8px 0 0 8px;
+    border-radius: var(--border-radius) 0 0 var(--border-radius);
     width: 250px;
 }
 
@@ -34,11 +46,42 @@ html {
     padding: 8px 12px;
 }
 
-#file-contents {
-    display: none;
+.main-table {
     width: 70%;
     margin: 20px auto auto;
-    border: 2px solid black;
+}
+
+.tab-contents {
+    border: var(--border-size) solid black;
     padding: 10px;
     background-color: white;
+    position: relative;
+    top: -1px;
+    z-index: -1;
+    border-radius: 0 0 var(--border-radius) var(--border-radius);
+}
+
+.tab-selector-table {
+    display: table;
+    width: 100%;
+}
+
+.tab-selector {
+    display: table-cell;
+    border: var(--border-size) solid black;
+    border-bottom: none;
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
+    background-color: white;
+    padding: 10px 14px;
+    margin-right: 10px;
+    cursor: pointer;
+}
+
+.inactive-tab {
+    background-color: #eeeeee;
+    border-bottom: var(--border-size) solid black;
+}
+
+.hidden {
+    display: none;
 }
