@@ -1,7 +1,7 @@
 const fileSelector = document.getElementById('file-selector');
 const fakeFileSelector = document.getElementById('fake-file-selector');
-const sourceCodeDiv = document.getElementById('tab2');
-const analysisDiv = document.getElementById('tab1');
+const sourceCodeTab = document.getElementById('tab2');
+const analysisTab = document.getElementById('tab1');
 const fileNameSpan = document.getElementById('filename-display');
 const mainTable = document.getElementsByClassName('main-table')[0];
 
@@ -42,9 +42,9 @@ fileSelector.addEventListener("input", e => {
             })
             .then(content => {
                 const macroSourceCodes = extractMacro(content);
-                sourceCodeDiv.innerText = "";
+                tabTextElement(sourceCodeTab).innerText = "";
                 for (const macroSourceCode of macroSourceCodes) {
-                    sourceCodeDiv.innerText += macroSourceCode + "\n\n========================================\n\n";
+                    tabTextElement(sourceCodeTab).innerText += macroSourceCode + "\n\n========================================\n\n";
                 }
                 analyzeCode();
             });
@@ -58,6 +58,14 @@ fakeFileSelector.addEventListener("click", () => fileSelector.click());
 
 for (const tabSelector of document.getElementsByClassName("tab-selector")) {
     tabSelector.addEventListener("click", () => showTab(tabSelector.dataset.tab));
+}
+
+for (const tab of document.getElementsByClassName("tab-contents")) {
+    const copyButton = document.createElement("div");
+    tab.insertBefore(copyButton, tab.firstChild);
+    copyButton.innerText = "Copy to Clipboard";
+    copyButton.classList.add("copy-button");
+    copyButton.addEventListener("click", (e) => copyTabToClipboard(e));
 }
 
 function makeAllTabSelectorsInactive() {
@@ -80,6 +88,21 @@ function showTab(id) {
 }
 
 function analyzeCode() {
-    analysisDiv.innerText = "";
-    analysisDiv.innerText = "I don't know";
+    tabTextElement(analysisTab).innerText = "";
+    tabTextElement(analysisTab).innerText = "I don't know";
 }
+
+function tabTextElement(tabElement) {
+    return tabElement.querySelector(".tab-text");
+}
+
+function copyTabToClipboard(e) {
+    const text = e.target.parentElement.querySelector(".tab-text").innerText;
+    const dummyInput = document.createElement("textarea");
+    document.body.appendChild(dummyInput);
+    dummyInput.value = text;
+    dummyInput.select();
+    document.execCommand("copy");
+    document.body.removeChild(dummyInput);
+}
+

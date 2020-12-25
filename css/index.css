@@ -1,11 +1,13 @@
 :root {
     --border-radius: 8px;
     --border-size: 1px;
+    --default-font-family: 'Roboto', sans-serif;
+    --green-color: #91CF0F;
 }
 
 html {
     font-size: 16px;
-    font-family: 'Roboto', sans-serif;
+    font-family: var(--default-font-family);
     background-color: #fcfff6;
 }
 
@@ -30,7 +32,7 @@ html {
 
 .file-input-button {
     border-radius: 0 var(--border-radius) var(--border-radius) 0;
-    background-color: #91CF0F;
+    background-color: var(--green-color);
     font-weight: bold;
     color: white;
 }
@@ -57,7 +59,6 @@ html {
     background-color: white;
     position: relative;
     top: -1px;
-    z-index: -1;
     border-radius: 0 0 var(--border-radius) var(--border-radius);
 }
 
@@ -67,6 +68,8 @@ html {
 }
 
 .tab-selector {
+    z-index: 2;
+    position: relative;
     display: table-cell;
     border: var(--border-size) solid black;
     border-bottom: none;
@@ -89,4 +92,16 @@ html {
 
 .code {
     font-family: 'Consolas', monospace;
+}
+
+.copy-button {
+    display: inline-block;
+    cursor: pointer;
+    padding: 8px 12px;
+    background-color: var(--green-color);
+    border-radius: var(--border-radius);
+    color: white;
+    font-weight: bold;
+    position: absolute;
+    right: 10px;
 }
