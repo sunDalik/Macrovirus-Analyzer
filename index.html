@@ -3,9 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <title>Macro Virus Analyzer</title>
+    <link rel="stylesheet" href="css/index.css">
+
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
 </head>
 <body>
-<input type="file" id="file-selector" multiple accept=".docm, .xlsm">
+<div class="file-input" id="fake-file-selector">
+    <span class="file-input-text" id="filename-display">Choose file...</span>
+    <span class="file-input-button">Browse</span>
+    <input class="real-file-input" type="file" id="file-selector" multiple accept=".docm, .xlsm">
+</div>
 <div id="file-contents">
 </div>
 </body>

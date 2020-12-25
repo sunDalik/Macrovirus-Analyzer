@@ -1,12 +1,14 @@
 const fileSelector = document.getElementById('file-selector');
+const fakeFileSelector = document.getElementById('fake-file-selector');
 const fileContentsDiv = document.getElementById('file-contents');
+const fileNameSpan = document.getElementById('filename-display');
 
 fileSelector.addEventListener("input", e => {
     const fileList = e.target.files;
 
     for (const file of fileList) {
         if (file === null) continue;
-
+        fileNameSpan.innerText = file.name;
         /*
         const reader = new FileReader();
         let fileContents = "";
@@ -35,6 +37,7 @@ fileSelector.addEventListener("input", e => {
             .then(content => {
                 const macroSourceCodes = extractMacro(content);
                 fileContentsDiv.innerText = "";
+                fileContentsDiv.style.display = "block";
                 for (const macroSourceCode of macroSourceCodes) {
                     fileContentsDiv.innerText += macroSourceCode + "\n\n========================================\n\n";
                 }
@@ -43,6 +46,6 @@ fileSelector.addEventListener("input", e => {
         // only read first file for now
         break;
     }
-
-
 });
+
+fakeFileSelector.addEventListener("click", () => fileSelector.click());

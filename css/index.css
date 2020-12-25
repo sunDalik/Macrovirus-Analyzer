@@ -1,0 +1,44 @@
+html {
+    font-size: 16px;
+    font-family: 'Robot', sans-serif;
+    background-color: #fcfff6;
+}
+
+.real-file-input {
+    display: none;
+}
+
+.file-input {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    margin-top: 120px;
+    cursor: pointer;
+}
+
+.file-input-button {
+    border-radius: 0 8px 8px 0;
+    background-color: #91CF0F;
+    font-weight: bold;
+    color: white;
+}
+
+.file-input-text {
+    border: 2px solid;
+    background-color: white;
+    border-radius: 8px 0 0 8px;
+    width: 250px;
+}
+
+.file-input-text, .file-input-button {
+    padding: 8px 12px;
+}
+
+#file-contents {
+    display: none;
+    width: 70%;
+    margin: 20px auto auto;
+    border: 2px solid black;
+    padding: 10px;
+    background-color: white;
+}
