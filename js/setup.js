@@ -1,5 +1,6 @@
 import JSZip from "jszip";
 import {extractMacro} from "./macros_extraction";
+import {analyzeCode} from "./analysis";
 
 global = window;
 
@@ -47,11 +48,13 @@ fileSelector.addEventListener("input", e => {
             })
             .then(content => {
                 const macroSourceCodes = extractMacro(content);
-                tabTextElement(sourceCodeTab).innerText = "";
+                tabTextElement(sourceCodeTab).innerHTML = "";
+                tabTextElement(analysisTab).innerHTML = "";
+                const delimiter = "\n========================================\n\n";
                 for (const macroSourceCode of macroSourceCodes) {
-                    tabTextElement(sourceCodeTab).innerText += macroSourceCode + "\n\n========================================\n\n";
+                    tabTextElement(sourceCodeTab).innerHTML += macroSourceCode + delimiter;
+                    tabTextElement(analysisTab).innerHTML += analyzeCode(macroSourceCode) + delimiter;
                 }
-                analyzeCode();
             });
 
         // only read first file for now
@@ -90,11 +93,6 @@ function showTab(id) {
     document.querySelector(".tab-selector[data-tab='" + id + "']").classList.remove("inactive-tab");
     hideAllTabs();
     document.getElementById(id).classList.remove("hidden");
-}
-
-function analyzeCode() {
-    tabTextElement(analysisTab).innerText = "";
-    tabTextElement(analysisTab).innerText = "I don't know";
 }
 
 function tabTextElement(tabElement) {
