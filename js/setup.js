@@ -51,7 +51,11 @@ fileSelector.addEventListener("input", e => {
                 tabTextElement(sourceCodeTab).innerHTML = "";
                 tabTextElement(analysisTab).innerHTML = "";
                 for (let i = 0; i < macroSourceCodes.length; i++) {
-                    const macroSourceCode = macroSourceCodes[i];
+                    let macroSourceCode = macroSourceCodes[i];
+
+                    macroSourceCode = removeAttributes(macroSourceCode);
+                    if (macroSourceCode === "" || macroSourceCode === "\n") continue;
+
                     tabTextElement(sourceCodeTab).innerHTML += macroSourceCode;
                     tabTextElement(analysisTab).innerHTML += analyzeCode(macroSourceCode);
 
@@ -115,3 +119,14 @@ function copyTabToClipboard(e) {
     document.body.removeChild(dummyInput);
 }
 
+function removeAttributes(code) {
+    const codeArray = code.split("\n");
+    for (let i = 0; i < codeArray.length; i++) {
+        if (codeArray[i].startsWith("Attribute VB_")) {
+            codeArray[i] = "";
+        } else {
+            codeArray[i] += "\n";
+        }
+    }
+    return codeArray.join("");
+}
