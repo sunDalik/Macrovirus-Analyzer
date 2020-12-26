@@ -1,3 +1,8 @@
+import JSZip from "jszip";
+import {extractMacro} from "./macros_extraction";
+
+global = window;
+
 const fileSelector = document.getElementById('file-selector');
 const fakeFileSelector = document.getElementById('fake-file-selector');
 const sourceCodeTab = document.getElementById('tab2');

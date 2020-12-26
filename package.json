@@ -1,0 +1,29 @@
+{
+  "name": "macrovirus_analyzer",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "rollup -c",
+    "pack": "NODE_ENV=production rollup -c",
+    "watch": "rollup -c -w"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sunDalik/Macrovirus-Analyzer.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sunDalik/Macrovirus-Analyzer/issues"
+  },
+  "homepage": "https://github.com/sunDalik/Macrovirus-Analyzer#readme",
+  "devDependencies": {
+    "jszip": "^3.5.0",
+    "rollup": "^2.35.1",
+    "rollup-plugin-commonjs": "^10.1.0",
+    "rollup-plugin-node-builtins": "^2.1.2",
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "rollup-plugin-terser": "^7.0.2"
+  }
+}

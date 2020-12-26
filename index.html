@@ -7,13 +7,18 @@
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+
+    <script>
+        var global = global || window;
+    </script>
 </head>
 <body>
 <div class="outer-file-input">
     <div class="file-input" id="fake-file-selector">
         <span class="file-input-text" id="filename-display">Choose file...</span>
         <span class="file-input-button">Browse</span>
-        <input class="real-file-input" type="file" id="file-selector" multiple accept=".docm, .xlsm">
+        <input class="real-file-input" type="file" id="file-selector" accept=".docm, .xlsm">
+        <!-- todo add "multiple" when you're ready to handle multiple files -->
     </div>
 </div>
 <div class="main-table hidden">
@@ -31,8 +36,5 @@
     </div>
 </div>
 </body>
-<script src="js/jszip.min.js"></script>
-<script src="js/vba_source_code_decompression.js"></script>
-<script src="js/macros_extraction.js"></script>
-<script src="js/file_reader.js"></script>
+<script src="app.js"></script>
 </html>

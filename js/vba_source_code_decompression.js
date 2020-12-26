@@ -1,5 +1,5 @@
 // compressedArray is ArrayBuffer
-function decompressVBASourceCode(compressedArray) {
+export function decompressVBASourceCode(compressedArray) {
     const byteCompressedArray = new Uint8Array(compressedArray);
     const decompressedArray = [];
     let compressedCurrent = 0;

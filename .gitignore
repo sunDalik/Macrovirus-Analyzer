@@ -2,3 +2,4 @@
 chaos/
 test_inputs/
 *.iml
+node_modules/

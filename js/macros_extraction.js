@@ -1,5 +1,7 @@
 // vbaProject is an array of bytes
-function extractMacro(vbaProject) {
+import {decompressVBASourceCode} from "./vba_source_code_decompression";
+
+export function extractMacro(vbaProject) {
     const codeSequence = [0, 65, 116, 116, 114, 105, 98, 117, 116, 0, 101];
     const resultIndexes = [];
 
