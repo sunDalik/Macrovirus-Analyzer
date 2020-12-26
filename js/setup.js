@@ -50,10 +50,16 @@ fileSelector.addEventListener("input", e => {
                 const macroSourceCodes = extractMacro(content);
                 tabTextElement(sourceCodeTab).innerHTML = "";
                 tabTextElement(analysisTab).innerHTML = "";
-                const delimiter = "\n========================================\n\n";
-                for (const macroSourceCode of macroSourceCodes) {
-                    tabTextElement(sourceCodeTab).innerHTML += macroSourceCode + delimiter;
-                    tabTextElement(analysisTab).innerHTML += analyzeCode(macroSourceCode) + delimiter;
+                for (let i = 0; i < macroSourceCodes.length; i++) {
+                    const macroSourceCode = macroSourceCodes[i];
+                    tabTextElement(sourceCodeTab).innerHTML += macroSourceCode;
+                    tabTextElement(analysisTab).innerHTML += analyzeCode(macroSourceCode);
+
+                    if (i < macroSourceCodes.length - 1) {
+                        const delimiter = "\n========================================\n\n";
+                        tabTextElement(sourceCodeTab).innerHTML += delimiter;
+                        tabTextElement(analysisTab).innerHTML += delimiter;
+                    }
                 }
             });
 
