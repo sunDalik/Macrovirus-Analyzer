@@ -31,46 +31,62 @@ fileSelector.addEventListener("input", e => {
 
         showTab("tab2");
 
-        const jsZip = new JSZip();
-        jsZip.loadAsync(file)
-            .then(zip => {
-                for (const zipFileName in zip.files) {
-                    if (zipFileName.endsWith("vbaProject.bin")) {
-                        const currentFile = zip.files[zipFileName];
-                        //const liFileName = document.createElement("li");
-                        //liFileName.innerText = zipFileName;
-                        //fileContentsDiv.appendChild(liFileName);
-                        return currentFile.async("array");
+        if (file.name.endsWith(".docm") || file.name.endsWith(".xlsm")) {
+            const jsZip = new JSZip();
+            jsZip.loadAsync(file)
+                .then(zip => {
+                    for (const zipFileName in zip.files) {
+                        //todo vbaProject.bin can potentially be renamed so you need to check for this
+                        if (zipFileName.endsWith("vbaProject.bin")) {
+                            const currentFile = zip.files[zipFileName];
+                            //const liFileName = document.createElement("li");
+                            //liFileName.innerText = zipFileName;
+                            //fileContentsDiv.appendChild(liFileName);
+                            return currentFile.async("array");
+                        }
                     }
-                }
-            }, () => {
-                console.log("Not a valid zip file");
-            })
-            .then(content => {
-                const macroSourceCodes = extractMacro(content);
-                tabTextElement(sourceCodeTab).innerHTML = "";
-                tabTextElement(analysisTab).innerHTML = "";
-                for (let i = 0; i < macroSourceCodes.length; i++) {
-                    let macroSourceCode = macroSourceCodes[i];
-
-                    macroSourceCode = removeAttributes(macroSourceCode);
-                    if (macroSourceCode === "" || macroSourceCode === "\n") continue;
-
-                    tabTextElement(sourceCodeTab).innerHTML += macroSourceCode;
-                    tabTextElement(analysisTab).innerHTML += analyzeCode(macroSourceCode);
-
-                    if (i < macroSourceCodes.length - 1) {
-                        const delimiter = "\n========================================\n\n";
-                        tabTextElement(sourceCodeTab).innerHTML += delimiter;
-                        tabTextElement(analysisTab).innerHTML += delimiter;
-                    }
-                }
+                }, () => {
+                    console.log("Not a valid zip file");
+                })
+                .then(content => {
+                    displayResults(content);
+                });
+        } else if (file.name.endsWith(".doc") || file.name.endsWith(".xls")) {
+            const reader = new FileReader();
+            reader.addEventListener('load', e => {
+                displayResults(new Uint8Array(e.target.result));
             });
-
+            reader.readAsArrayBuffer(file);
+        }
         // only read first file for now
         break;
     }
 });
+
+function displayResults(binaryArray) {
+    const macroSourceCodes = extractMacro(binaryArray);
+    tabTextElement(sourceCodeTab).innerHTML = "";
+    tabTextElement(analysisTab).innerHTML = "";
+    if (macroSourceCodes.length === 0) {
+        tabTextElement(analysisTab).innerHTML = "File is safe!\n(No macro scripts detected)";
+        tabTextElement(sourceCodeTab).innerHTML = "<i>No macro scripts detected</i>";
+    }
+    for (let i = 0; i < macroSourceCodes.length; i++) {
+        let macroSourceCode = macroSourceCodes[i];
+
+        macroSourceCode = removeAttributes(macroSourceCode);
+        if (macroSourceCode === "" || macroSourceCode === "\n") continue;
+
+        tabTextElement(sourceCodeTab).innerHTML += macroSourceCode;
+        tabTextElement(analysisTab).innerHTML += analyzeCode(macroSourceCode);
+
+        if (i < macroSourceCodes.length - 1) {
+            const delimiter = "\n========================================\n\n";
+            tabTextElement(sourceCodeTab).innerHTML += delimiter;
+            tabTextElement(analysisTab).innerHTML += delimiter;
+        }
+    }
+}
 
 fakeFileSelector.addEventListener("click", () => fileSelector.click());
 
