@@ -1,13 +1,16 @@
 import JSZip from "jszip";
 import {extractMacro} from "./macros_extraction";
 import {analyzeCode} from "./analysis";
+import {deobfuscateCode} from "./deobfuscation";
+import {ss_code} from "./test_codes";
 
 global = window;
 
 const fileSelector = document.getElementById('file-selector');
 const fakeFileSelector = document.getElementById('fake-file-selector');
-const sourceCodeTab = document.getElementById('tab2');
 const analysisTab = document.getElementById('tab1');
+const sourceCodeTab = document.getElementById('tab2');
+const deobfuscatedCode = document.getElementById('tab3');
 const fileNameSpan = document.getElementById('filename-display');
 const mainTable = document.getElementsByClassName('main-table')[0];
 
@@ -64,13 +67,17 @@ fileSelector.addEventListener("input", e => {
 });
 
 function displayResults(binaryArray) {
-    const macroSourceCodes = extractMacro(binaryArray);
+    let macroSourceCodes = extractMacro(binaryArray);
     tabTextElement(sourceCodeTab).innerHTML = "";
     tabTextElement(analysisTab).innerHTML = "";
     if (macroSourceCodes.length === 0) {
         tabTextElement(analysisTab).innerHTML = "File is safe!\n(No macro scripts detected)";
         tabTextElement(sourceCodeTab).innerHTML = "<i>No macro scripts detected</i>";
+        return;
     }
+
+    //macroSourceCodes = [ss_code];
+
     for (let i = 0; i < macroSourceCodes.length; i++) {
         let macroSourceCode = macroSourceCodes[i];
 
@@ -86,6 +93,8 @@ function displayResults(binaryArray) {
             tabTextElement(analysisTab).innerHTML += delimiter;
         }
     }
+
+    tabTextElement(deobfuscatedCode).innerHTML = deobfuscateCode(tabTextElement(sourceCodeTab).innerHTML);
 }
 
 fakeFileSelector.addEventListener("click", () => fileSelector.click());

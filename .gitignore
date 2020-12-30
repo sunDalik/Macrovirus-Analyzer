@@ -3,3 +3,4 @@ chaos/
 test_inputs/
 *.iml
 node_modules/
+test_codes.js

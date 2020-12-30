@@ -63,6 +63,7 @@ html {
 }
 
 .tab-selector-table {
+    table-layout: fixed;
     display: table;
     width: 100%;
 }
@@ -108,4 +109,5 @@ html {
 
 .tab-text {
     white-space: pre-wrap;
+    word-break: break-all;
 }
