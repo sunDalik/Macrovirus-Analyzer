@@ -1,7 +1,7 @@
 const varName = "[A-Za-z][A-Za-z0-9_\-]*";
 
 const functionRegex = new RegExp(`^[ \\t]*(Public|Private|)[ \\t]*(Sub|Function)[ \\t]+(?<functionName>${varName})[ \\t]*\(.*\)[ \\t]*$`);
-const forRegex = new RegExp(`^[ \\t]*For[ \\t]+(?<iteratorVariable>${varName})[ \\t]*=\\s*$`);
+const forRegex = new RegExp(`^[ \\t]*For[ \\t]+(?<iteratorVariable>${varName})[ \\t]*=[ \\t]*$`);
 
 const variableDeclarationRegex = new RegExp(`(^[ \\t]*(Set|Dim)[ \\t]+(?<variableName>${varName}).*?$)|(^[ \\t]*(?<variableName2>${varName})([ \\t]*\(.+?\))?[ \\t]*=.*?$)`);
 
@@ -51,7 +51,7 @@ function identCode(code) {
     for (let i = 0; i < codeLines.length; i++) {
         let lvlMod = 0;
         codeLines[i] = codeLines[i].trim();
-        const matchResult = codeLines[i].match(new RegExp("^\\s*(?<firstWord>\\b[A-Za-z]+?\\b).*?$"));
+        const matchResult = codeLines[i].match(new RegExp("^[ \\t]*((Private|Public)[ \\t]+)?(?<firstWord>\\b[A-Za-z]+?\\b).*?$"));
         if (matchResult) {
             const firstWord = matchResult.groups.firstWord;
             const blockStart = blocks.find(b => b.start === firstWord);
