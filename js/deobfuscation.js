@@ -27,7 +27,7 @@ export function deobfuscateCode(code) {
     deobfuscatedCode = shrinkSpaces(deobfuscatedCode);
     if (settings.removeDeadCode) deobfuscatedCode = removeDeadCode(deobfuscatedCode);
     if (settings.renameVariables) deobfuscatedCode = renameVariables(deobfuscatedCode);
-    deobfuscatedCode = identCode(deobfuscatedCode);
+    deobfuscatedCode = indentCode(deobfuscatedCode);
     return deobfuscatedCode;
 }
 
@@ -43,8 +43,8 @@ function shrinkSpaces(code) {
     return code;
 }
 
-function identCode(code) {
-    const blockIdent = "    ";
+function indentCode(code) {
+    const blockIndent = "    ";
     let blockStack = [];
 
     const codeLines = code.split("\n");
@@ -66,7 +66,7 @@ function identCode(code) {
             }
         }
         for (let lvl = 0; lvl < blockStack.length + lvlMod; lvl++) {
-            codeLines[i] = blockIdent + codeLines[i];
+            codeLines[i] = blockIndent + codeLines[i];
         }
     }
     code = codeLines.join("\n");
