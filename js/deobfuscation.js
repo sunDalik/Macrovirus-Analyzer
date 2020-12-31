@@ -34,8 +34,9 @@ export function deobfuscateCode(code) {
 
 function shrinkSpaces(code) {
     const codeLines = code.split("\n");
-    for (let i = 0; i < codeLines.length; i++) {
+    for (let i = codeLines.length - 1; i >= 0; i--) {
         codeLines[i] = codeLines[i].trim();
+        if (codeLines[i] === "") codeLines.splice(i, 1);
     }
     code = codeLines.join("\n");
 

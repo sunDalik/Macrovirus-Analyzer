@@ -70,6 +70,7 @@ function displayResults(binaryArray) {
     let macroSourceCodes = extractMacro(binaryArray);
     tabTextElement(sourceCodeTab).innerHTML = "";
     tabTextElement(analysisTab).innerHTML = "";
+    tabTextElement(deobfuscatedCodeTab).innerHTML = "";
     if (macroSourceCodes.length === 0) {
         tabTextElement(analysisTab).innerHTML = "File is safe!\n(No macro scripts detected)";
         tabTextElement(sourceCodeTab).innerHTML = "<i>No macro scripts detected</i>";
@@ -81,21 +82,35 @@ function displayResults(binaryArray) {
 
     for (let i = 0; i < macroSourceCodes.length; i++) {
         let macroSourceCode = macroSourceCodes[i];
+        const matchResult = macroSourceCode.match(new RegExp("^Attribute VB_Name = \"(?<moduleName>.+?)\"$", "m"));
+        if (matchResult) {
+            console.log(matchResult.groups.moduleName);
+        }
 
         //macroSourceCode = removeAttributes(macroSourceCode);
         if (macroSourceCode === "" || macroSourceCode === "\n") continue;
 
-        tabTextElement(sourceCodeTab).innerHTML += macroSourceCode;
-        tabTextElement(analysisTab).innerHTML += analyzeCode(macroSourceCode);
+        const div = document.createElement("div");
+        div.innerHTML = macroSourceCode;
+        div.classList.add("table-module");
+        tabTextElement(sourceCodeTab).appendChild(div);
+
+        const div2 = document.createElement("div");
+        div2.innerHTML = analyzeCode(macroSourceCode);
+        div2.classList.add("table-module");
+        tabTextElement(analysisTab).appendChild(div2);
+
+        const div3 = document.createElement("div");
+        div3.innerHTML = deobfuscateCode(macroSourceCode);
+        div3.classList.add("table-module");
+        tabTextElement(deobfuscatedCodeTab).appendChild(div3);
 
         if (i < macroSourceCodes.length - 1) {
-            const delimiter = "\n========================================\n\n";
-            tabTextElement(sourceCodeTab).innerHTML += delimiter;
-            tabTextElement(analysisTab).innerHTML += delimiter;
+            div.classList.add("module-separator");
+            div2.classList.add("module-separator");
+            div3.classList.add("module-separator");
         }
     }
-
-    tabTextElement(deobfuscatedCodeTab).innerHTML = deobfuscateCode(tabTextElement(sourceCodeTab).innerHTML);
 }
 
 fakeFileSelector.addEventListener("click", () => fileSelector.click());

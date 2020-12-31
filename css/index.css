@@ -55,7 +55,7 @@ html {
 
 .tab-contents {
     border: var(--border-size) solid black;
-    padding: 15px 10px 10px;
+    /*padding: 15px 10px 10px;*/
     background-color: white;
     position: relative;
     top: -1px;
@@ -110,4 +110,12 @@ html {
 .tab-text {
     white-space: pre-wrap;
     word-break: break-all;
+}
+
+.table-module {
+    padding: 15px 10px 10px;
+}
+
+.module-separator {
+    border-bottom: 1px solid black;
 }
