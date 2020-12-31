@@ -1,9 +1,10 @@
 const varName = "[A-Za-z][A-Za-z0-9_\-]*";
 
-const functionRegex = new RegExp(`^[ \\t]*(Public|Private|)[ \\t]*(Sub|Function)[ \\t]+(?<functionName>${varName})[ \\t]*\(.*\)[ \\t]*$`);
+const functionRegex = new RegExp(`^[ \\t]*(Public|Private|)[ \\t]*(Sub|Function)[ \\t]+(?<functionName>${varName})[ \\t]*\\(.*\\)[ \\t]*$`);
 const forRegex = new RegExp(`^[ \\t]*For[ \\t]+(?<iteratorVariable>${varName})[ \\t]*=[ \\t]*$`);
 
-const variableDeclarationRegex = new RegExp(`(^[ \\t]*(Set|Dim)[ \\t]+(?<variableName>${varName}).*?$)|(^[ \\t]*(?<variableName2>${varName})([ \\t]*\(.+?\))?[ \\t]*=.*?$)`);
+const variableDeclarationRegex = new RegExp(`(^[ \\t]*(Set|Dim)[ \\t]+(?<variableName>${varName}).*?$)|(^[ \\t]*(?<variableName2>${varName})([ \\t]*\\(.+?\\))?[ \\t]*=.*?$)`);
+const functionDeclarationRegex = new RegExp(`^[ \\t]*((Public|Private)[ \\t]+)?(Function|Sub)[ \\t]+(?<functionName>${varName}).*?$`);
 
 const blocks = [{start: "Sub", end: "End"},
     {start: "Function", end: "End"},
@@ -79,6 +80,10 @@ function renameVariables(code) {
 }
 
 function removeDeadCode(code) {
+    /*
+    Notes:
+    Functions and Subs can't be "unused" because they can be called directly from a document's list of macro scripts by a user
+     */
     code = removeUnusedVariables(code);
     return code;
 }
@@ -87,6 +92,7 @@ function removeUnusedVariables(code) {
     /*
     Notes:
     You cannot assign a value to an array that was not declared with Dim
+    //todo should account for SCOPE of variables
      */
     const variables = [];
 

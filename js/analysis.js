@@ -13,7 +13,8 @@ const suspiciousWords = [
     "Microsoft.XMLHTTP",
 
     // File execution
-    "Shell"
+    "Shell",
+    "Create" // https://docs.microsoft.com/en-us/windows/win32/cimwin32prov/create-method-in-class-win32-process
 ];
 
 export function analyzeCode(code) {
