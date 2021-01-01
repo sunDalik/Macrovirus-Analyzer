@@ -79,6 +79,9 @@ function indentCode(code) {
 const autoExecFunctions = ["document_open"];
 
 function renameVariables(code) {
+    //todo block-aware renaming?
+    //todo type-aware names?
+    //todo function arguments renaming
     const functions = [];
     const newFuncs = [];
 

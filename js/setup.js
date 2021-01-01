@@ -2,7 +2,6 @@ import JSZip from "jszip";
 import {extractMacro} from "./macros_extraction";
 import {analyzeCode} from "./analysis";
 import {deobfuscateCode} from "./deobfuscation";
-import {ss_code} from "./test_codes";
 import {simulate} from "./vba_simulation";
 
 global = window;
@@ -87,8 +86,9 @@ function displayResults(binaryArray) {
     for (let i = 0; i < macroSourceCodes.length; i++) {
         let macroSourceCode = macroSourceCodes[i];
         const matchResult = macroSourceCode.match(new RegExp("^Attribute VB_Name = \"(?<moduleName>.+?)\"$", "m"));
+        let moduleName = "";
         if (matchResult) {
-            console.log(matchResult.groups.moduleName);
+            moduleName = matchResult.groups.moduleName;
         }
 
         //macroSourceCode = removeAttributes(macroSourceCode);
@@ -105,8 +105,15 @@ function displayResults(binaryArray) {
         tabTextElement(analysisTab).appendChild(div2);
 
         const div3 = document.createElement("div");
-        div3.innerHTML = deobfuscateCode(macroSourceCode);
+        div3.innerHTML = deobfuscateCode(removeAttributes(macroSourceCode));
         div3.classList.add("table-module");
+        if (moduleName !== "") {
+            const header = document.createElement("div");
+            header.classList.add("module-header");
+            header.classList.add("table-module");
+            header.innerHTML = moduleName;
+            tabTextElement(deobfuscatedCodeTab).appendChild(header);
+        }
         tabTextElement(deobfuscatedCodeTab).appendChild(div3);
         deobfuscatedCodes.push(div3.innerHTML);
 
