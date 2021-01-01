@@ -75,9 +75,57 @@ function indentCode(code) {
     return code;
 }
 
-function renameVariables(code) {
+// lower case
+const autoExecFunctions = ["document_open"];
 
-    return code;
+function renameVariables(code) {
+    const functions = [];
+    const newFuncs = [];
+
+    let codeLines = code.split("\n");
+    for (const line of codeLines) {
+        const matchResult = line.match(functionDeclarationRegex);
+        if (matchResult) {
+            const functionName = matchResult.groups.functionName;
+            functions.push(functionName.toLowerCase());
+        }
+    }
+
+    let iterator = 0;
+    for (const func of functions) {
+        if (autoExecFunctions.includes(func)) continue;
+        const new_func_name = "fun_" + iterator;
+        for (let i = 0; i < codeLines.length; i++) {
+            codeLines[i] = codeLines[i].replaceAll(new RegExp(`\\b${func}\\b`, "gi"), new_func_name);
+        }
+        newFuncs.push(new_func_name);
+        iterator++;
+    }
+
+    const variables = [];
+
+    for (const line of codeLines) {
+        const matchResult = line.match(variableDeclarationRegex);
+        if (matchResult) {
+            if (matchResult.groups.variableName) {
+                variables.push(matchResult.groups.variableName.toLowerCase());
+            } else if (matchResult.groups.variableName2) {
+                variables.push(matchResult.groups.variableName2.toLowerCase());
+            }
+        }
+    }
+
+    iterator = 0;
+    for (const variable of variables) {
+        if (newFuncs.includes(variable)) continue;
+        const new_var_name = "var_" + iterator;
+        for (let i = 0; i < codeLines.length; i++) {
+            codeLines[i] = codeLines[i].replaceAll(new RegExp(`\\b${variable}\\b`, "gi"), new_var_name);
+        }
+        iterator++;
+    }
+
+    return codeLines.join("\n");
 }
 
 function removeDeadCode(code) {

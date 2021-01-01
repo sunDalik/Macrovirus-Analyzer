@@ -3,6 +3,7 @@ import {extractMacro} from "./macros_extraction";
 import {analyzeCode} from "./analysis";
 import {deobfuscateCode} from "./deobfuscation";
 import {ss_code} from "./test_codes";
+import {simulate} from "./vba_simulation";
 
 global = window;
 
@@ -11,6 +12,7 @@ const fakeFileSelector = document.getElementById('fake-file-selector');
 const analysisTab = document.getElementById('tab1');
 const sourceCodeTab = document.getElementById('tab2');
 const deobfuscatedCodeTab = document.getElementById('tab3');
+const vbaSimulationTab = document.getElementById('tab4');
 const fileNameSpan = document.getElementById('filename-display');
 const mainTable = document.getElementsByClassName('main-table')[0];
 
@@ -80,6 +82,8 @@ function displayResults(binaryArray) {
 
     //macroSourceCodes = [ss_code];
 
+    const deobfuscatedCodes = [];
+
     for (let i = 0; i < macroSourceCodes.length; i++) {
         let macroSourceCode = macroSourceCodes[i];
         const matchResult = macroSourceCode.match(new RegExp("^Attribute VB_Name = \"(?<moduleName>.+?)\"$", "m"));
@@ -104,6 +108,7 @@ function displayResults(binaryArray) {
         div3.innerHTML = deobfuscateCode(macroSourceCode);
         div3.classList.add("table-module");
         tabTextElement(deobfuscatedCodeTab).appendChild(div3);
+        deobfuscatedCodes.push(div3.innerHTML);
 
         if (i < macroSourceCodes.length - 1) {
             div.classList.add("module-separator");
@@ -111,6 +116,11 @@ function displayResults(binaryArray) {
             div3.classList.add("module-separator");
         }
     }
+
+    const div4 = document.createElement("div");
+    div4.innerHTML = simulate(deobfuscatedCodes.join("\n"), "document_open");
+    div4.classList.add("table-module");
+    tabTextElement(vbaSimulationTab).appendChild(div4);
 }
 
 fakeFileSelector.addEventListener("click", () => fileSelector.click());
