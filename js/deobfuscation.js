@@ -82,6 +82,7 @@ function renameVariables(code) {
     //todo block-aware renaming?
     //todo type-aware names?
     //todo function arguments renaming
+    //todo dont rename occurences in strings
     const functions = [];
     const newFuncs = [];
 

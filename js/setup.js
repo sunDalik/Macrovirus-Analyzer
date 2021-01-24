@@ -3,6 +3,7 @@ import {extractMacro} from "./macros_extraction";
 import {analyzeCode} from "./analysis";
 import {deobfuscateCode} from "./deobfuscation";
 import {simulate} from "./vba_simulation";
+import {ss_code} from "./test_codes";
 
 global = window;
 
@@ -11,7 +12,6 @@ const fakeFileSelector = document.getElementById('fake-file-selector');
 const analysisTab = document.getElementById('tab1');
 const sourceCodeTab = document.getElementById('tab2');
 const deobfuscatedCodeTab = document.getElementById('tab3');
-const vbaSimulationTab = document.getElementById('tab4');
 const fileNameSpan = document.getElementById('filename-display');
 const mainTable = document.getElementsByClassName('main-table')[0];
 
@@ -95,8 +95,15 @@ function displayResults(binaryArray) {
         if (macroSourceCode === "" || macroSourceCode === "\n") continue;
 
         const div = document.createElement("div");
-        div.innerHTML = macroSourceCode;
+        div.innerHTML = removeAttributes(macroSourceCode);
         div.classList.add("table-module");
+        if (moduleName !== "") {
+            const header = document.createElement("div");
+            header.classList.add("module-header");
+            header.classList.add("table-module");
+            header.innerHTML = moduleName;
+            tabTextElement(sourceCodeTab).appendChild(header);
+        }
         tabTextElement(sourceCodeTab).appendChild(div);
 
         const div2 = document.createElement("div");
@@ -127,7 +134,6 @@ function displayResults(binaryArray) {
     const div4 = document.createElement("div");
     div4.innerHTML = simulate(deobfuscatedCodes.join("\n"), "document_open");
     div4.classList.add("table-module");
-    tabTextElement(vbaSimulationTab).appendChild(div4);
 }
 
 fakeFileSelector.addEventListener("click", () => fileSelector.click());
@@ -137,6 +143,7 @@ for (const tabSelector of document.getElementsByClassName("tab-selector")) {
 }
 
 for (const tab of document.getElementsByClassName("tab-contents")) {
+    continue; //todo bad at its current state
     const copyButton = document.createElement("div");
     tab.insertBefore(copyButton, tab.firstChild);
     copyButton.innerText = "Copy to Clipboard";
