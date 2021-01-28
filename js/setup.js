@@ -2,10 +2,10 @@ import JSZip from "jszip";
 import {extractMacro} from "./macros_extraction";
 import {analyzeCode} from "./analysis";
 import {deobfuscateCode} from "./deobfuscation";
-import {simulate} from "./vba_simulation";
-import {ss_code} from "./test_codes";
+import {setupLocalStorage} from "./local_storage";
 
 global = window;
+setupLocalStorage();
 
 const fileSelector = document.getElementById('file-selector');
 const fakeFileSelector = document.getElementById('fake-file-selector');
@@ -130,10 +130,6 @@ function displayResults(binaryArray) {
             div3.classList.add("module-separator");
         }
     }
-
-    const div4 = document.createElement("div");
-    div4.innerHTML = simulate(deobfuscatedCodes.join("\n"), "document_open");
-    div4.classList.add("table-module");
 }
 
 fakeFileSelector.addEventListener("click", () => fileSelector.click());
