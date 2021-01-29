@@ -65,7 +65,9 @@ function readOLEFile(byteArray) {
     const numberOfDIFATSectors = readInt(byteArray, offset, 4);
     const DIFAT = readByteArray(byteArray, offset, 436);
 
-
+    //todo
+    //readDIFAT(byteArray)
+    const FAT = readFAT(byteArray, DIFAT, numberOfFATSectors);
 }
 
 /*
@@ -102,6 +104,20 @@ function readMiniSector() {
     //const offset = sectorNumber * sectorSize;
     //todo
     return;
+}
+
+function readFAT(byteArray, DIFAT, numberOfFATSectors) {
+    const sectorSize = 512;//todo make changeable;
+    const FAT = new Uint8Array(numberOfFATSectors * sectorSize);
+    let offset = {value: 0};
+    for (let i = 0; i < numberOfFATSectors; i++) {
+        const sectorNumber = readInt(DIFAT, offset, 4);
+        const sector = readSector(byteArray, sectorNumber);
+        for (let b = 0; b < sector.length; b++) {
+            FAT[i * sectorSize + b] = sector[b];
+        }
+    }
+    return FAT;
 }
 
 function byteArrayToArrayBuffer(byteArray) {
