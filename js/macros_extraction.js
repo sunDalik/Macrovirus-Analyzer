@@ -68,6 +68,7 @@ function readOLEFile(byteArray) {
     //todo
     //readDIFAT(byteArray)
     const FAT = readFAT(byteArray, DIFAT, numberOfFATSectors);
+    const fileTree = readFileTree(byteArray, FAT, firstDirectorySector);
 }
 
 /*
@@ -99,6 +100,27 @@ function readSector(byteArray, sectorNumber) {
     return byteArray.slice(offset, offset + sectorSize);
 }
 
+function readSectorChainFAT(byteArray, startSectorNumber, FAT) {
+    const sectorSize = 512;//todo make changeable;
+    const sectorIndexesArray = [startSectorNumber];
+    let attempt = 0;
+    while (attempt++ < 999999) {
+        const nextSector = readInt(FAT, {value: sectorIndexesArray[sectorIndexesArray.length - 1] * 4}, 4);
+        if (nextSector === 0xFFFFFFFE) break;
+        sectorIndexesArray.push(nextSector);
+    }
+
+    const resultArray = new Uint8Array(sectorIndexesArray.length * sectorSize);
+    for (let i = 0; i < sectorIndexesArray.length; i++) {
+        const sectorNumber = sectorIndexesArray[i];
+        const offset = (sectorNumber + 1) * sectorSize;
+        for (let b = 0; b < sectorSize; b++) {
+            resultArray[i * sectorSize + b] = byteArray[offset + b];
+        }
+    }
+    return resultArray;
+}
+
 function readMiniSector() {
     const sectorSize = 64;//todo make changeable;
     //const offset = sectorNumber * sectorSize;
@@ -118,6 +140,29 @@ function readFAT(byteArray, DIFAT, numberOfFATSectors) {
         }
     }
     return FAT;
+}
+
+function readFileTree(byteArray, FAT, firstDirectorySector) {
+    const sectorSize = 512;//todo make changeable;
+    const cutoff = 4096;//todo make changeable;
+    const directoryEntrySize = 128;
+    const directoriesData = readSectorChainFAT(byteArray, firstDirectorySector, FAT);
+
+    const directoryEntries = [];
+    for (let i = 0; i < directoriesData.length; i += directoryEntrySize) {
+        const dirEntryObj = {id: i / directoryEntrySize};
+        const nameFieldLength = readInt(directoriesData, {value: i + 64}, 2);
+        const nameLength = Math.max(nameFieldLength / 2 - 1, 0);
+        const nameArray = new Uint8Array(nameLength);
+        for (let j = 0; j < nameLength; j++) {
+            nameArray[j] = directoriesData[i + j * 2];
+        }
+        dirEntryObj.name = byteArrayToStr(nameArray);
+
+        directoryEntries.push(dirEntryObj);
+    }
+    console.log(directoryEntries);
+    return directoryEntries;
 }
 
 function byteArrayToArrayBuffer(byteArray) {
