@@ -1,7 +1,10 @@
 // vbaProject is an array of bytes
 import {decompressVBASourceCode} from "./vba_source_code_decompression";
+import {OLEFile} from "./ole_file";
 
 export function extractMacro(vbaProject) {
+    readOLEFile(new Uint8Array(vbaProject));
+
     const codeSequence = [0, 65, 116, 116, 114, 105, 98, 117, 116, 0, 101];
     const resultIndexes = [];
 
@@ -34,6 +37,71 @@ export function extractMacro(vbaProject) {
         macroSourceCodes.push(byteArrayToStr(codeBytes));
     }
     return macroSourceCodes;
+}
+
+//should ole file reading be performed in olefile constructor?
+function readOLEFile(byteArray) {
+    // https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-cfb/53989ce4-7b05-4f8d-829b-d08d6148375b
+    const oleFile = new OLEFile();
+    const offset = {value: 0};
+    const headerSignature = readInt(byteArray, offset, 8); // Must be 0xD0 0xCF 0x11 0xE0 0xA1 0xB1 0x1A 0xE1
+    const headerCLSID = readByteArray(byteArray, offset, 16);
+    const minorVersion = readInt(byteArray, offset, 2);
+    const majorVersion = readInt(byteArray, offset, 2);
+    const byteOrder = readInt(byteArray, offset, 2);
+    const sectorShift = readInt(byteArray, offset, 2);
+    const sectorSize = 2 ** sectorShift;
+    const miniSectorShift = readInt(byteArray, offset, 2);
+    const miniSectorSize = 2 ** miniSectorShift;
+    const reserved = readByteArray(byteArray, offset, 6);
+    const numberOfDirectorySectors = readInt(byteArray, offset, 4);
+    const numberOfFATSectors = readInt(byteArray, offset, 4);
+    const firstDirectorySector = readInt(byteArray, offset, 4);
+    const transactionSignatureNumber = readInt(byteArray, offset, 4);
+    const miniStreamCutoff = readInt(byteArray, offset, 4);
+    const firstMiniFATSector = readInt(byteArray, offset, 4);
+    const numberOfMiniFATSectors = readInt(byteArray, offset, 4);
+    const firstDIFATSector = readInt(byteArray, offset, 4);
+    const numberOfDIFATSectors = readInt(byteArray, offset, 4);
+    const DIFAT = readByteArray(byteArray, offset, 436);
+
+
+}
+
+/*
+byteArray - Uint8Array with file contents
+offset - object of type {value: x} where x is the actual offset value
+offset will be incremented after read
+bytesToRead - number of bytes to read from byteArray
+ */
+function readInt(byteArray, offset, bytesToRead) {
+    const slicedArray = byteArray.slice(offset.value, offset.value + bytesToRead).buffer;
+    let value;
+    if (bytesToRead === 1) value = new DataView(slicedArray).getUint8(0);
+    else if (bytesToRead === 2) value = new DataView(slicedArray).getUint16(0, true);
+    else if (bytesToRead === 4) value = new DataView(slicedArray).getUint32(0, true);
+    else if (bytesToRead > 4) value = new DataView(slicedArray).getBigUint64(0, true);
+    offset.value += bytesToRead;
+    return value;
+}
+
+function readByteArray(byteArray, offset, bytesToRead) {
+    const slicedArray = byteArray.slice(offset.value, offset.value + bytesToRead);
+    offset.value += bytesToRead;
+    return slicedArray;
+}
+
+function readSector(byteArray, sectorNumber) {
+    const sectorSize = 512;//todo make changeable;
+    const offset = (sectorNumber + 1) * sectorSize;
+    return byteArray.slice(offset, offset + sectorSize);
+}
+
+function readMiniSector() {
+    const sectorSize = 64;//todo make changeable;
+    //const offset = sectorNumber * sectorSize;
+    //todo
+    return;
 }
 
 function byteArrayToArrayBuffer(byteArray) {

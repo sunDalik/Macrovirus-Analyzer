@@ -1,3 +1,5 @@
+import {readSetting, SETTINGS} from "./local_storage";
+
 const varName = "[A-Za-z][A-Za-z0-9_\-]*";
 
 const functionRegex = new RegExp(`^[ \\t]*(Public|Private|)[ \\t]*(Sub|Function)[ \\t]+(?<functionName>${varName})[ \\t]*\\(.*\\)[ \\t]*$`);
@@ -18,16 +20,11 @@ const blocks = [{start: "Sub", end: "End"},
     {start: "With", end: "End"}
 ];
 
-const settings = {
-    renameVariables: true,
-    removeDeadCode: true
-};
-
 export function deobfuscateCode(code) {
     let deobfuscatedCode = code;
     deobfuscatedCode = shrinkSpaces(deobfuscatedCode);
-    if (settings.removeDeadCode) deobfuscatedCode = removeDeadCode(deobfuscatedCode);
-    if (settings.renameVariables) deobfuscatedCode = renameVariables(deobfuscatedCode);
+    if (readSetting(SETTINGS.removeDeadCode)) deobfuscatedCode = removeDeadCode(deobfuscatedCode);
+    if (readSetting(SETTINGS.renameVariables)) deobfuscatedCode = renameVariables(deobfuscatedCode);
     deobfuscatedCode = indentCode(deobfuscatedCode);
     return deobfuscatedCode;
 }
