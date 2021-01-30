@@ -1,6 +1,7 @@
 // vbaProject is an array of bytes
 import {decompressVBASourceCode} from "./vba_source_code_decompression";
 import {OLEFile} from "./ole_file";
+import {DirEntryType} from "./enums";
 
 export function extractMacro(vbaProject) {
     readOLEFile(new Uint8Array(vbaProject));
@@ -150,19 +151,71 @@ function readFileTree(byteArray, FAT, firstDirectorySector) {
 
     const directoryEntries = [];
     for (let i = 0; i < directoriesData.length; i += directoryEntrySize) {
-        const dirEntryObj = {id: i / directoryEntrySize};
-        const nameFieldLength = readInt(directoriesData, {value: i + 64}, 2);
+        const dirEntry = {
+            id: i / directoryEntrySize,
+            name: "",
+            type: DirEntryType.UNKNOWN,
+            children: [],
+            startingSector: null,
+            streamSize: null,
+
+            //temporary fields needed to build a proper tree later
+            leftSiblingId: null,
+            rightSiblingId: null,
+            childId: null
+        };
+        const offset = {value: i + 64};
+        const nameFieldLength = readInt(directoriesData, offset, 2);
         const nameLength = Math.max(nameFieldLength / 2 - 1, 0);
         const nameArray = new Uint8Array(nameLength);
         for (let j = 0; j < nameLength; j++) {
             nameArray[j] = directoriesData[i + j * 2];
         }
-        dirEntryObj.name = byteArrayToStr(nameArray);
+        dirEntry.name = byteArrayToStr(nameArray);
 
-        directoryEntries.push(dirEntryObj);
+        const objectType = readInt(directoriesData, offset, 1);
+        if (objectType === 0) dirEntry.type = DirEntryType.UNKNOWN;
+        else if (objectType === 1) dirEntry.type = DirEntryType.STORAGE;
+        else if (objectType === 2) dirEntry.type = DirEntryType.STREAM;
+        else if (objectType === 5) dirEntry.type = DirEntryType.ROOT;
+
+        const colorFlag = readInt(directoriesData, offset, 1);
+        dirEntry.leftSiblingId = readInt(directoriesData, offset, 4);
+        dirEntry.rightSiblingId = readInt(directoriesData, offset, 4);
+        dirEntry.childId = readInt(directoriesData, offset, 4);
+        const CLSID = readByteArray(directoriesData, offset, 16);
+        const stateBits = readByteArray(directoriesData, offset, 4);
+        const creationTime = readInt(directoriesData, offset, 8);
+        const modifiedTime = readInt(directoriesData, offset, 8);
+        dirEntry.startingSector = readInt(directoriesData, offset, 4);
+        dirEntry.streamSize = readInt(directoriesData, offset, 8);
+        directoryEntries.push(dirEntry);
     }
-    console.log(directoryEntries);
-    return directoryEntries;
+
+    const findSiblings = (dir, entries) => {
+        let siblings = [dir];
+        if (dir.leftSiblingId !== null && dir.leftSiblingId !== 0xFFFFFFFF) {
+            siblings = siblings.concat(findSiblings(entries.find(d => d.id === dir.leftSiblingId), entries));
+        }
+        if (dir.rightSiblingId !== null && dir.rightSiblingId !== 0xFFFFFFFF) {
+            siblings = siblings.concat(findSiblings(entries.find(d => d.id === dir.rightSiblingId), entries));
+        }
+        return siblings;
+    };
+
+    const findChildren = (dir, entries) => {
+        if (dir.childId !== null && dir.childId !== 0xFFFFFFFF) {
+            dir.children = findSiblings(entries.find(d => d.id === dir.childId), entries);
+        }
+
+        for (const child of dir.children) {
+            findChildren(child, entries);
+        }
+    };
+
+    findChildren(directoryEntries[0], directoryEntries);
+    const directoryTree = directoryEntries[0];
+    return directoryTree;
 }
 
 function byteArrayToArrayBuffer(byteArray) {
