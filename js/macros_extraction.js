@@ -4,7 +4,7 @@ import {OLEFile} from "./ole_file";
 import {DirEntryType} from "./enums";
 
 export function extractMacro(vbaProject) {
-    readOLEFile(new Uint8Array(vbaProject));
+    return readOLEFile(new Uint8Array(vbaProject));
 
     const codeSequence = [0, 65, 116, 116, 114, 105, 98, 117, 116, 0, 101];
     const resultIndexes = [];
@@ -69,7 +69,179 @@ function readOLEFile(byteArray) {
     //todo
     //readDIFAT(byteArray)
     const FAT = readFAT(byteArray, DIFAT, numberOfFATSectors);
+    const miniFAT = readMiniFAT(byteArray, firstMiniFATSector, FAT);
     const fileTree = readFileTree(byteArray, FAT, firstDirectorySector);
+    const miniStream = readSectorChainFAT(byteArray, fileTree.startingSector, FAT);
+
+    // all names are case-insensitive
+    const vbaFolder = fileTree.children.find(dir => dir.name.toUpperCase() === "VBA");
+    const sourceCodes = [];
+    if (vbaFolder) {
+        const modules = [];
+        let dirStream = null;
+        for (const child of vbaFolder.children) {
+            if (!["_VBA_PROJECT", "DIR"].includes(child.name.toUpperCase()) && !child.name.toUpperCase().startsWith("__SRP_")) {
+                modules.push(child);
+            }
+            if (child.name.toUpperCase() === "DIR") {
+                dirStream = readStream(byteArray, FAT, miniStream, miniFAT, child.startingSector, child.streamSize);
+            }
+        }
+
+        //todo why does decompression need arraybuffer instead of uint8array? change
+        dirStream = new Uint8Array(decompressVBASourceCode(dirStream.buffer));
+        const dirOffset = {value: 0};
+
+        //read project information record
+        dirOffset.value += 38;
+
+        dirOffset.value += 2;
+        const projectNameRecordSize = readInt(dirStream, dirOffset, 4);
+        dirOffset.value += projectNameRecordSize;
+
+        dirOffset.value += 2;
+        const docStringSize = readInt(dirStream, dirOffset, 4);
+        dirOffset.value += docStringSize;
+        dirOffset.value += 2;
+        const docStringUnicodeSize = readInt(dirStream, dirOffset, 4);
+        dirOffset.value += docStringUnicodeSize;
+
+        dirOffset.value += 2;
+        const helpFileSize = readInt(dirStream, dirOffset, 4);
+        dirOffset.value += helpFileSize;
+        dirOffset.value += 2;
+        const helpFileSize2 = readInt(dirStream, dirOffset, 4);
+        dirOffset.value += helpFileSize2;
+
+        dirOffset.value += 32;
+
+        dirOffset.value += 2;
+        const constantsSize = readInt(dirStream, dirOffset, 4);
+        dirOffset.value += constantsSize;
+        dirOffset.value += 2;
+        const constantsSizeUnicode = readInt(dirStream, dirOffset, 4);
+        dirOffset.value += constantsSizeUnicode;
+
+        //read project references record
+        let attempt = 0;
+        while (attempt++ < 999999) {
+            const readNameReference = () => {
+                const id = readInt(dirStream, dirOffset, 2);
+                if (id === 0x000F) return false; // value 0x000F indicates end of references array and start of module records
+                const nameSize = readInt(dirStream, dirOffset, 4);
+                dirOffset.value += nameSize;
+                dirOffset.value += 2;
+                const nameSizeUnicode = readInt(dirStream, dirOffset, 4);
+                dirOffset.value += nameSizeUnicode;
+                return true;
+            };
+
+            const nameReadResult = readNameReference();
+            if (nameReadResult === false) break;
+
+            const referenceRecordId = readInt(dirStream, dirOffset, 2);
+            if (referenceRecordId === 0x002F) {
+                // reference control
+                // OPTIONAL ORIGINAL RECORD FIELD ???????????????????????????????
+                const sizeTwiddled = readInt(dirStream, dirOffset, 4);
+                const sizeLibidTwiddled = readInt(dirStream, dirOffset, 4);
+                dirOffset.value += sizeLibidTwiddled;
+                dirOffset.value += 6;
+                const reserved = readInt(dirStream, dirOffset, 2);
+                // Optional Name Record????
+                if (reserved === 0x0016) {
+                    dirOffset.value -= 2;
+                    readNameReference();
+                    dirOffset.value += 2;
+                }
+                const sizeExtended = readInt(dirStream, dirOffset, 4);
+                const sizeLibidExtended = readInt(dirStream, dirOffset, 4);
+                dirOffset.value += sizeLibidExtended;
+                dirOffset.value += 26;
+            } else if (referenceRecordId === 0x0033) {
+                // reference original
+                const sizeLibidOriginal = readInt(dirStream, dirOffset, 4);
+                dirOffset.value += sizeLibidOriginal;
+            } else if (referenceRecordId === 0x000D) {
+                // reference registered
+                const size = readInt(dirStream, dirOffset, 4);
+                const sizeLibid = readInt(dirStream, dirOffset, 4);
+                dirOffset.value += sizeLibid;
+                dirOffset.value += 6;
+            } else if (referenceRecordId === 0x000E) {
+                // reference project
+                const size = readInt(dirStream, dirOffset, 4);
+                const sizeLibidAbsolute = readInt(dirStream, dirOffset, 4);
+                dirOffset.value += sizeLibidAbsolute;
+                const sizeLibidRelative = readInt(dirStream, dirOffset, 4);
+                dirOffset.value += sizeLibidRelative;
+                dirOffset.value += 6;
+            }
+        }
+
+        // reading modules records
+        // we've already read the id
+        dirOffset.value += 4;
+        const count = readInt(dirStream, dirOffset, 2);
+        dirOffset.value += 8;
+        const moduleRecordsArray = [];
+        for (let i = 0; i < count; i++) {
+            //module name
+            dirOffset.value += 2;
+            const moduleNameSize = readInt(dirStream, dirOffset, 4);
+            dirOffset.value += moduleNameSize;
+
+            //module name unicode
+            dirOffset.value += 2;
+            const moduleNameUnicodeSize = readInt(dirStream, dirOffset, 4);
+            dirOffset.value += moduleNameUnicodeSize;
+
+            //module stream name
+            dirOffset.value += 2;
+            const streamNameSize = readInt(dirStream, dirOffset, 4);
+            const streamName = readByteArray(dirStream, dirOffset, streamNameSize);
+            dirOffset.value += 2;
+            const streamNameUnicodeSize = readInt(dirStream, dirOffset, 4);
+            const streamNameUnicode = readByteArray(dirStream, dirOffset, streamNameUnicodeSize);
+
+            //doc string
+            dirOffset.value += 2;
+            const docStringSize = readInt(dirStream, dirOffset, 4);
+            dirOffset.value += docStringSize;
+            dirOffset.value += 2;
+            const docStringUnicodeSize = readInt(dirStream, dirOffset, 4);
+            dirOffset.value += docStringUnicodeSize;
+
+            //module offset
+            dirOffset.value += 2;
+            dirOffset.value += 4;
+            const sourceOffset = readInt(dirStream, dirOffset, 4);
+
+            dirStream.value += 10;
+            dirStream.value += 8;
+            dirStream.value += 6;
+            dirStream.value += 6;
+            dirStream.value += 6;
+            dirStream.value += 2;
+            dirStream.value += 4;
+
+            //todo secondModule seems to be wrong? empty name and ridiculous offset
+            moduleRecordsArray.push({name: byteArrayToStr(streamName), sourceOffset: sourceOffset});
+        }
+
+        const sourceCodes = [];
+
+        for (const module of modules) {
+            const dataArray = readSectorChainFAT(byteArray, module.startingSector, FAT);
+            const moduleRecord = moduleRecordsArray.find(m => m.name.toUpperCase() === module.name.toUpperCase());
+            if (!moduleRecord) continue;
+            const sourceOffset = moduleRecord.sourceOffset;
+            const sourceCode = byteArrayToStr(decompressVBASourceCode(dataArray.slice(sourceOffset).buffer));
+            sourceCodes.push(sourceCode);
+        }
+        return sourceCodes;
+    }
+    return [];
 }
 
 /*
@@ -95,13 +267,22 @@ function readByteArray(byteArray, offset, bytesToRead) {
     return slicedArray;
 }
 
-function readSector(byteArray, sectorNumber) {
+function readStream(byteArray, FAT, miniStream, miniFAT, sectorNumber, streamSize) {
+    const cutoff = 4096; //todo make changeable
+    if (streamSize >= cutoff) {
+        return readSectorChainFAT(byteArray, sectorNumber, FAT, streamSize);
+    } else {
+        return readMiniSectorChain(miniStream, sectorNumber, miniFAT, streamSize);
+    }
+}
+
+function readSectorFAT(byteArray, sectorNumber) {
     const sectorSize = 512;//todo make changeable;
     const offset = (sectorNumber + 1) * sectorSize;
     return byteArray.slice(offset, offset + sectorSize);
 }
 
-function readSectorChainFAT(byteArray, startSectorNumber, FAT) {
+function readSectorChainFAT(byteArray, startSectorNumber, FAT, streamSize = -1) {
     const sectorSize = 512;//todo make changeable;
     const sectorIndexesArray = [startSectorNumber];
     let attempt = 0;
@@ -111,22 +292,56 @@ function readSectorChainFAT(byteArray, startSectorNumber, FAT) {
         sectorIndexesArray.push(nextSector);
     }
 
-    const resultArray = new Uint8Array(sectorIndexesArray.length * sectorSize);
+    let resultArrayLength = streamSize === -1 ? sectorIndexesArray.length * sectorSize : streamSize;
+    resultArrayLength = Number(resultArrayLength);
+    const resultArray = new Uint8Array(resultArrayLength);
+    let bytesRead = 0;
     for (let i = 0; i < sectorIndexesArray.length; i++) {
         const sectorNumber = sectorIndexesArray[i];
         const offset = (sectorNumber + 1) * sectorSize;
         for (let b = 0; b < sectorSize; b++) {
             resultArray[i * sectorSize + b] = byteArray[offset + b];
+            bytesRead++;
+            if (bytesRead >= resultArrayLength) return resultArray;
         }
     }
     return resultArray;
 }
 
-function readMiniSector() {
+function readMiniFAT(byteArray, firstMiniFATSector, FAT) {
+    return readSectorChainFAT(byteArray, firstMiniFATSector, FAT);
+}
+
+function readMiniSector(miniStream, sectorNumber) {
     const sectorSize = 64;//todo make changeable;
-    //const offset = sectorNumber * sectorSize;
-    //todo
-    return;
+    const offset = sectorNumber * sectorSize;
+    return miniStream.slice(offset, offset + sectorSize);
+}
+
+function readMiniSectorChain(miniStream, startSectorNumber, miniFAT, streamSize = -1) {
+    const sectorSize = 64;//todo make changeable;
+    const sectorIndexesArray = [startSectorNumber];
+    let attempt = 0;
+    while (attempt++ < 9999999) {
+        const nextSector = readInt(miniFAT, {value: sectorIndexesArray[sectorIndexesArray.length - 1] * 4}, 4);
+        if (nextSector === 0xFFFFFFFE) break;
+        sectorIndexesArray.push(nextSector);
+    }
+
+    let resultArrayLength = streamSize === -1 ? sectorIndexesArray.length * sectorSize : streamSize;
+    resultArrayLength = Number(resultArrayLength);
+    const resultArray = new Uint8Array(resultArrayLength);
+    let bytesRead = 0;
+    for (let i = 0; i < sectorIndexesArray.length; i++) {
+        const sectorNumber = sectorIndexesArray[i];
+        const offset = sectorNumber * sectorSize;
+        for (let b = 0; b < sectorSize; b++) {
+            resultArray[i * sectorSize + b] = miniStream[offset + b];
+            bytesRead++;
+            if (bytesRead >= resultArrayLength) return resultArray;
+        }
+    }
+    return resultArray;
 }
 
 function readFAT(byteArray, DIFAT, numberOfFATSectors) {
@@ -135,7 +350,7 @@ function readFAT(byteArray, DIFAT, numberOfFATSectors) {
     let offset = {value: 0};
     for (let i = 0; i < numberOfFATSectors; i++) {
         const sectorNumber = readInt(DIFAT, offset, 4);
-        const sector = readSector(byteArray, sectorNumber);
+        const sector = readSectorFAT(byteArray, sectorNumber);
         for (let b = 0; b < sector.length; b++) {
             FAT[i * sectorSize + b] = sector[b];
         }
@@ -214,8 +429,7 @@ function readFileTree(byteArray, FAT, firstDirectorySector) {
     };
 
     findChildren(directoryEntries[0], directoryEntries);
-    const directoryTree = directoryEntries[0];
-    return directoryTree;
+    return directoryEntries[0];
 }
 
 function byteArrayToArrayBuffer(byteArray) {
