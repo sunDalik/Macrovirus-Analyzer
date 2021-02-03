@@ -4,6 +4,7 @@ import {OLEFile} from "./ole_file";
 import {DirEntryType} from "./enums";
 
 export function extractMacro(vbaProject) {
+    //todo add try catch for corrupted files?
     return readOLEFile(new Uint8Array(vbaProject));
 
     const codeSequence = [0, 65, 116, 116, 114, 105, 98, 117, 116, 0, 101];
@@ -74,7 +75,13 @@ function readOLEFile(byteArray) {
     const miniStream = readSectorChainFAT(byteArray, fileTree.startingSector, FAT);
 
     // all names are case-insensitive
-    const vbaFolder = fileTree.children.find(dir => dir.name.toUpperCase() === "VBA");
+    const macrosFolder = fileTree.children.find(dir => dir.name.toUpperCase() === "MACROS");
+    let vbaFolder = null;
+    if (macrosFolder) {
+        vbaFolder = macrosFolder.children.find(dir => dir.name.toUpperCase() === "VBA");
+    } else {
+        vbaFolder = fileTree.children.find(dir => dir.name.toUpperCase() === "VBA");
+    }
     const sourceCodes = [];
     if (vbaFolder) {
         const modules = [];
@@ -232,7 +239,7 @@ function readOLEFile(byteArray) {
         const sourceCodes = [];
 
         for (const module of modules) {
-            const dataArray = readSectorChainFAT(byteArray, module.startingSector, FAT);
+            const dataArray = readStream(byteArray, FAT, miniStream, miniFAT, module.startingSector, module.streamSize);
             const moduleRecord = moduleRecordsArray.find(m => m.name.toUpperCase() === module.name.toUpperCase());
             if (!moduleRecord) continue;
             const sourceOffset = moduleRecord.sourceOffset;
