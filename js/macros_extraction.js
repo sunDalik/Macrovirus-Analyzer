@@ -2,6 +2,7 @@
 import {decompressVBASourceCode} from "./vba_source_code_decompression";
 import {OLEFile} from "./ole_file";
 import {DirEntryType} from "./enums";
+import {disassemblePCode} from "./pcode";
 
 export function extractMacro(vbaProject) {
     //todo add try catch for corrupted files?
@@ -86,12 +87,16 @@ function readOLEFile(byteArray) {
     if (vbaFolder) {
         const modules = [];
         let dirStream = null;
+        let vbaProjectStream = null;
         for (const child of vbaFolder.children) {
             if (!["_VBA_PROJECT", "DIR"].includes(child.name.toUpperCase()) && !child.name.toUpperCase().startsWith("__SRP_")) {
                 modules.push(child);
             }
             if (child.name.toUpperCase() === "DIR") {
                 dirStream = readStream(byteArray, FAT, miniStream, miniFAT, child.startingSector, child.streamSize);
+            }
+            if (child.name.toUpperCase() === "_VBA_PROJECT") {
+                vbaProjectStream = readStream(byteArray, FAT, miniStream, miniFAT, child.startingSector, child.streamSize);
             }
         }
 
@@ -244,6 +249,8 @@ function readOLEFile(byteArray) {
             if (!moduleRecord) continue;
             const sourceOffset = moduleRecord.sourceOffset;
             const sourceCode = byteArrayToStr(decompressVBASourceCode(dataArray.slice(sourceOffset).buffer));
+            //const pcode = dataArray.slice(0, sourceOffset);
+            console.log(disassemblePCode(dataArray, vbaProjectStream));
             sourceCodes.push(sourceCode);
         }
         return sourceCodes;
@@ -257,7 +264,7 @@ offset - object of type {value: x} where x is the actual offset value
 offset will be incremented after read
 bytesToRead - number of bytes to read from byteArray
  */
-function readInt(byteArray, offset, bytesToRead) {
+export function readInt(byteArray, offset, bytesToRead) {
     const slicedArray = byteArray.slice(offset.value, offset.value + bytesToRead).buffer;
     let value;
     if (bytesToRead === 1) value = new DataView(slicedArray).getUint8(0);
@@ -268,10 +275,18 @@ function readInt(byteArray, offset, bytesToRead) {
     return value;
 }
 
-function readByteArray(byteArray, offset, bytesToRead) {
+export function readByteArray(byteArray, offset, bytesToRead) {
     const slicedArray = byteArray.slice(offset.value, offset.value + bytesToRead);
     offset.value += bytesToRead;
     return slicedArray;
+}
+
+export function skipStructure(buffer, offset, lengthBytes, elementSize = 1) {
+    let length = readInt(buffer, offset, lengthBytes);
+    let invalidLength = lengthBytes === 2 ? 0xFFFF : 0xFFFFFFFF;
+    if (length !== invalidLength) {
+        offset.value += length * elementSize;
+    }
 }
 
 function readStream(byteArray, FAT, miniStream, miniFAT, sectorNumber, streamSize) {
@@ -450,7 +465,7 @@ function byteArrayToArrayBuffer(byteArray) {
     return arrayBuffer;
 }
 
-function byteArrayToStr(array) {
+export function byteArrayToStr(array) {
     // utf16
     let string = "";
     for (let i = 0; i < array.length; i++) {
