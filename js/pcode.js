@@ -7,10 +7,11 @@ let is64bit = true; //?
 
 export function disassemblePCode(moduleData, vbaProjectData) {
     const identifiers = getIdentifiers(vbaProjectData);
-    /*
     let vbaVer = 3;
-    let version = getWord(vbaProjectData, 2);
-    let dwLength, declarationTable, tableStart, indirectTable, dwLength2, objectTable, offset, offs;
+    let offset = {value: 2};
+    let version = readInt(vbaProjectData, offset, 2);
+    let dwLength, declarationTable, tableStart, indirectTable, dwLength2, objectTable;
+    let offs = {value: 0};
     if (version >= 0x6B) {
         if (version >= 0x97) {
             vbaVer = 7;
@@ -18,70 +19,68 @@ export function disassemblePCode(moduleData, vbaProjectData) {
             vbaVer = 6;
         }
         if (is64bit) {
-            dwLength = getDWord(moduleData, 0x0043);
+            dwLength = readInt(moduleData, {value: 0x0043}, 4);
             declarationTable = moduleData.slice(0x0047, 0x0047 + dwLength);
-            dwLength = getDWord(moduleData, 0x0011);
+            dwLength = readInt(moduleData, {value: 0x0011}, 4);
             tableStart = dwLength + 12;
         } else {
-            dwLength = getDWord(moduleData, 0x003F);
+            dwLength = readInt(moduleData, {value: 0x003F}, 4);
             declarationTable = moduleData.slice(0x0043, 0x0043 + dwLength);
-            dwLength = getDWord(moduleData, 0x0011);
+            dwLength = readInt(moduleData, {value: 0x0011}, 4);
             tableStart = dwLength + 10;
         }
-        dwLength = getDWord(moduleData, tableStart);
+        dwLength = readInt(moduleData, {value: tableStart}, 4);
         tableStart += 4;
         indirectTable = moduleData.slice(tableStart, tableStart + dwLength);
-        dwLength = getDWord(moduleData, 0x0005);
+        dwLength = readInt(moduleData, {value: 0x0005}, 4);
         dwLength2 = dwLength + 0x8A;
-        dwLength = getDWord(moduleData, dwLength2);
+        dwLength = readInt(moduleData, {value: dwLength2}, 4);
         dwLength2 += 4;
         objectTable = moduleData.slice(dwLength2, dwLength2 + dwLength);
-        offset = 0x0019;
+        offset.value = 0x0019;
     } else {
         vbaVer = 5;
-        offset = 11;
-        dwLength = getDWord(moduleData, offset);
-        offs = offset + 4;
-        declarationTable = moduleData.slice(offs, offs + dwLength);
-        offset = skipStructure(moduleData, offset, True, 1, False);
-        offset += 64;
-        offset = skipStructure(moduleData, offset, False, 16, False);
-        offset = skipStructure(moduleData, offset, True, 1, False);
-        offset += 6;
-        offset = skipStructure(moduleData, offset, True, 1, False);
-        offs = offset + 8;
-        dwLength = getDWord(moduleData, offs);
+        offset.value = 11;
+        dwLength = readInt(moduleData, offset, 4);
+        offs.value = offset.value + 4;
+        declarationTable = moduleData.slice(offs.value, offs.value + dwLength);
+        skipStructure(moduleData, offset, 4);
+        offset.value += 64;
+        skipStructure(moduleData, offset, 2, 16);
+        skipStructure(moduleData, offset, 4);
+        offset.value += 6;
+        skipStructure(moduleData, offset, 4);
+        offs.value = offset.value + 8;
+        dwLength = readInt(moduleData, offs, 4);
         tableStart = dwLength + 14;
-        offs = dwLength + 10;
-        dwLength = getDWord(moduleData, offs);
+        offs.value = dwLength + 10;
+        dwLength = readInt(moduleData, offs, 4);
         indirectTable = moduleData.slice(tableStart, tableStart + dwLength);
-        dwLength = getDWord(moduleData, offset);
-        offs = dwLength + 0x008A;
-        dwLength = getDWord(moduleData, offs);
-        offs += 4;
-        objectTable = moduleData.slice(offs, offs + dwLength);
-        offset += 77;
+        dwLength = readInt(moduleData, offset, 4);
+        offs.value = dwLength + 0x008A;
+        dwLength = readInt(moduleData, offs, 4);
+        offs.value += 4;
+        objectTable = moduleData.slice(offs.value, offs.value + dwLength);
+        offset.value += 77;
     }
-    dwLength = getDWord(moduleData, offset);
-    offset = dwLength + 0x003C;
-    let magic = getVar(moduleData, offset, False);
-    offset += 2;
-    let numLines = getVar(moduleData, offset, False);
-    const pcodeStart = offset + numLines * 12 + 10;
+    dwLength = readInt(moduleData, offset, 4);
+    offset.value = dwLength + 0x003C;
+    offset.value += 4;
+    let numLines = readInt(moduleData, offset, 2);
+    const pcodeStart = offset.value + numLines * 12 + 10;
     const pcode = [];
-    for (let line = 0; line < numLines; line++) {
-        offset += 4;
-        const lineLength = getVar(moduleData, offset, False);
-        offset += 2;
-        const lineOffset = getVar(moduleData, offset, True);
-        pcode.push(dumpLine(moduleData, pcodeStart + lineOffset, lineLength, vbaVer, identifiers, objectTable, indirectTable, declarationTable, line));
+    console.log(numLines)
+    for (let i = 0; i < numLines; i++) {
+        offset.value += 4;
+        const lineLength = readInt(moduleData, offset, 2);
+        offset.value += 2;
+        const lineOffset = readInt(moduleData, offset, 4);
+        pcode.push(getPCodeLine(moduleData, pcodeStart + lineOffset, lineLength, vbaVer, identifiers, objectTable, indirectTable, declarationTable));
     }
     return pcode;
-
-     */
 }
 
-function dumpLine(moduleData, lineStart, lineLength, vbaVer, identifiers, objectTable, indirectTable, declarationTable, line) {
+function getPCodeLine(moduleData, lineStart, lineLength, vbaVer, identifiers, objectTable, indirectTable, declarationTable) {
 
 }
 
@@ -214,6 +213,6 @@ function getIdentifiers(vbaProjectData) {
             offset.value += 4;
         }
     }
-    console.log(identifiers);
+    //console.log(identifiers);
     return identifiers;
 }
