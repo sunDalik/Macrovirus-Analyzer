@@ -249,13 +249,41 @@ function readOLEFile(byteArray) {
             if (!moduleRecord) continue;
             const sourceOffset = moduleRecord.sourceOffset;
             const sourceCode = byteArrayToStr(decompressVBASourceCode(dataArray.slice(sourceOffset).buffer));
-            //const pcode = dataArray.slice(0, sourceOffset);
-            console.log(disassemblePCode(dataArray, vbaProjectStream));
+            const pcode = disassemblePCode(dataArray, vbaProjectStream);
+            console.log(pcode);
+            console.log(detectVBAStomping(pcode, sourceCode));
             sourceCodes.push(sourceCode);
         }
         return sourceCodes;
     }
     return [];
+}
+
+export function detectVBAStomping(pcode, sourceCode) {
+    const keywords = new Set();
+    for (const line of pcode) {
+        const tokens = line.split(" ");
+        const mnemonic = tokens[0];
+
+        let arg = '';
+        if (tokens.length >= 2) {
+            arg = tokens[1];
+        }
+
+        console.log("mnem: " + mnemonic + ", arg: " + arg);
+        if (['ArgsCall', 'ArgsLd', 'St', 'Ld', 'MemSt', 'Label'].includes(mnemonic)) {
+            let keyword = arg;
+            keywords.add(keyword);
+        }
+    }
+    console.log(keywords);
+
+    for (const keyword of keywords.values()) {
+        if (!sourceCode.includes(keyword)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 /*
