@@ -73,7 +73,7 @@ function displayResults(binaryArray) {
     tabTextElement(analysisTab).innerHTML = "";
     tabTextElement(deobfuscatedCodeTab).innerHTML = "";
     if (oleFile.macroModules.length === 0) {
-        tabTextElement(analysisTab).innerHTML = "File is safe!\n(No macro scripts detected)";
+        tabTextElement(analysisTab).innerHTML = "Module is safe!\n(No macro scripts detected)";
         tabTextElement(sourceCodeTab).innerHTML = "<i>No macro scripts detected</i>";
         tabTextElement(deobfuscatedCodeTab).innerHTML = "<i>No macro scripts detected</i>";
         return;
@@ -88,7 +88,6 @@ function displayResults(binaryArray) {
         let macroSourceCode = module.sourceCode;
 
         //macroSourceCode = removeAttributes(macroSourceCode);
-        if (macroSourceCode === "" || macroSourceCode === "\n") continue;
 
         const div = document.createElement("div");
         div.innerHTML = removeAttributes(macroSourceCode);
@@ -103,7 +102,7 @@ function displayResults(binaryArray) {
         tabTextElement(sourceCodeTab).appendChild(div);
 
         const div2 = document.createElement("div");
-        div2.innerHTML = analyzeCode(macroSourceCode);
+        div2.innerHTML = analyzeCode(macroSourceCode, module.pcode);
         div2.classList.add("table-module");
         tabTextElement(analysisTab).appendChild(div2);
 

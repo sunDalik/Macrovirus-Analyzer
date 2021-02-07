@@ -255,7 +255,6 @@ export class OLEFile {
                 macroModule.name = moduleRecord.name;
                 macroModule.sourceCode = byteArrayToStr(this.decompressVBASourceCode(dataArray.slice(moduleRecord.sourceOffset)));
                 macroModule.pcode = disassemblePCode(dataArray, vbaProjectStream);
-                //console.log(detectVBAStomping(macroModule.pcode, macroModule.sourceCode));
                 this.macroModules.push(macroModule);
             }
         }
