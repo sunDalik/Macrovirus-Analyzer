@@ -77,7 +77,7 @@ export class OLEFile {
             }
 
             //todo why does decompression need arraybuffer instead of uint8array? change
-            dirStream = new Uint8Array(this.decompressVBASourceCode(dirStream.buffer));
+            dirStream = this.decompressVBASourceCode(dirStream);
             const dirOffset = {value: 0};
 
             //read project information record
@@ -226,9 +226,8 @@ export class OLEFile {
                 if (!moduleRecord) continue;
                 macroModule.name = moduleRecord.name;
                 const sourceOffset = moduleRecord.sourceOffset;
-                macroModule.sourceCode = byteArrayToStr(this.decompressVBASourceCode(dataArray.slice(sourceOffset).buffer));
+                macroModule.sourceCode = byteArrayToStr(this.decompressVBASourceCode(dataArray.slice(sourceOffset)));
                 macroModule.pcode = disassemblePCode(dataArray, vbaProjectStream);
-                console.log(macroModule.pcode);
                 console.log(detectVBAStomping(macroModule.pcode, macroModule.sourceCode));
                 this.macroModules.push(macroModule);
             }
@@ -399,9 +398,7 @@ export class OLEFile {
         return arrayBuffer;
     }
 
-    // compressedArray is ArrayBuffer
-    decompressVBASourceCode(compressedArray) {
-        const byteCompressedArray = new Uint8Array(compressedArray);
+    decompressVBASourceCode(byteCompressedArray) {
         const decompressedArray = [];
         let compressedCurrent = 0;
 
@@ -412,12 +409,12 @@ export class OLEFile {
 
         compressedCurrent++;
 
-        while (compressedCurrent < compressedArray.byteLength) {
+        while (compressedCurrent < byteCompressedArray.length) {
             let compressedChunkStart = compressedCurrent;
 
             // first 16 bits
             // the header is in LE and the rightmost bit is the 0th.. makes sense right?
-            let compressedChunkHeader = this.get2ByteFromArrayBufferPositionLE(compressedArray, compressedChunkStart);
+            let compressedChunkHeader = readInt(byteCompressedArray, {value: compressedChunkStart}, 2);
 
             // first 12 bits
             let chunkSize = (compressedChunkHeader & 0x0FFF) + 3;
@@ -430,7 +427,7 @@ export class OLEFile {
 
             // 15th flag
             let chunkFlag = (compressedChunkHeader >> 15) & 0x01;
-            const compressedEnd = Math.min(compressedArray.byteLength, compressedChunkStart + chunkSize);
+            const compressedEnd = Math.min(byteCompressedArray.length, compressedChunkStart + chunkSize);
             compressedCurrent = compressedChunkStart + 2;
             const isCompressed = chunkFlag === 1;
             if (!isCompressed) {
@@ -452,7 +449,7 @@ export class OLEFile {
                             decompressedArray.push(byteCompressedArray[compressedCurrent]);
                             compressedCurrent++;
                         } else {
-                            const copyToken = this.get2ByteFromArrayBufferPositionLE(compressedArray, compressedCurrent);
+                            const copyToken = readInt(byteCompressedArray, {value: compressedCurrent}, 2);
                             const decompressedCurrent = decompressedArray.length;
                             const difference = decompressedCurrent - decompressedChunkStart;
                             const bitCount = Math.max(Math.ceil(Math.log2(difference)), 4);
@@ -473,11 +470,6 @@ export class OLEFile {
             }
         }
 
-        return decompressedArray;
-    }
-
-    get2ByteFromArrayBufferPositionLE(arrayBuffer, position) {
-        const slicedArray = arrayBuffer.slice(position, position + 2);
-        return new DataView(slicedArray).getUint16(0, true);
+        return new Uint8Array(decompressedArray);
     }
 }
