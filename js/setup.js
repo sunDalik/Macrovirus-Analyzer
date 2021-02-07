@@ -1,8 +1,8 @@
 import JSZip from "jszip";
-import {extractMacro} from "./macros_extraction";
 import {analyzeCode} from "./analysis";
 import {deobfuscateCode} from "./deobfuscation";
 import {setupLocalStorage} from "./local_storage";
+import {OLEFile} from "./OLEFile";
 
 global = window;
 setupLocalStorage();
@@ -53,7 +53,7 @@ fileSelector.addEventListener("input", e => {
                     console.log("Not a valid zip file");
                 })
                 .then(content => {
-                    displayResults(content);
+                    displayResults(new Uint8Array(content));
                 });
         } else if (file.name.endsWith(".doc") || file.name.endsWith(".xls")) {
             const reader = new FileReader();
@@ -68,11 +68,11 @@ fileSelector.addEventListener("input", e => {
 });
 
 function displayResults(binaryArray) {
-    let macroSourceCodes = extractMacro(binaryArray);
+    const oleFile = new OLEFile(binaryArray);
     tabTextElement(sourceCodeTab).innerHTML = "";
     tabTextElement(analysisTab).innerHTML = "";
     tabTextElement(deobfuscatedCodeTab).innerHTML = "";
-    if (macroSourceCodes.length === 0) {
+    if (oleFile.macroModules.length === 0) {
         tabTextElement(analysisTab).innerHTML = "File is safe!\n(No macro scripts detected)";
         tabTextElement(sourceCodeTab).innerHTML = "<i>No macro scripts detected</i>";
         tabTextElement(deobfuscatedCodeTab).innerHTML = "<i>No macro scripts detected</i>";
@@ -83,13 +83,9 @@ function displayResults(binaryArray) {
 
     const deobfuscatedCodes = [];
 
-    for (let i = 0; i < macroSourceCodes.length; i++) {
-        let macroSourceCode = macroSourceCodes[i];
-        const matchResult = macroSourceCode.match(new RegExp("^Attribute VB_Name = \"(?<moduleName>.+?)\"$", "m"));
-        let moduleName = "";
-        if (matchResult) {
-            moduleName = matchResult.groups.moduleName;
-        }
+    for (let i = 0; i < oleFile.macroModules.length; i++) {
+        const module = oleFile.macroModules[i];
+        let macroSourceCode = module.sourceCode;
 
         //macroSourceCode = removeAttributes(macroSourceCode);
         if (macroSourceCode === "" || macroSourceCode === "\n") continue;
@@ -97,11 +93,11 @@ function displayResults(binaryArray) {
         const div = document.createElement("div");
         div.innerHTML = removeAttributes(macroSourceCode);
         div.classList.add("table-module");
-        if (moduleName !== "") {
+        if (module.name !== "") {
             const header = document.createElement("div");
             header.classList.add("module-header");
             header.classList.add("table-module");
-            header.innerHTML = moduleName;
+            header.innerHTML = module.name;
             tabTextElement(sourceCodeTab).appendChild(header);
         }
         tabTextElement(sourceCodeTab).appendChild(div);
@@ -114,17 +110,17 @@ function displayResults(binaryArray) {
         const div3 = document.createElement("div");
         div3.innerHTML = deobfuscateCode(removeAttributes(macroSourceCode));
         div3.classList.add("table-module");
-        if (moduleName !== "") {
+        if (module.name !== "") {
             const header = document.createElement("div");
             header.classList.add("module-header");
             header.classList.add("table-module");
-            header.innerHTML = moduleName;
+            header.innerHTML = module.name;
             tabTextElement(deobfuscatedCodeTab).appendChild(header);
         }
         tabTextElement(deobfuscatedCodeTab).appendChild(div3);
         deobfuscatedCodes.push(div3.innerHTML);
 
-        if (i < macroSourceCodes.length - 1) {
+        if (i < oleFile.macroModules.length - 1) {
             div.classList.add("module-separator");
             div2.classList.add("module-separator");
             div3.classList.add("module-separator");

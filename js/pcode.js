@@ -1,4 +1,4 @@
-import {byteArrayToStr, readInt, skipStructure} from "./macros_extraction";
+import {byteArrayToStr, readInt, skipStructure} from "./file_processor";
 
 let is64bit = true; //?
 
