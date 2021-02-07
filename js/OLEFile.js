@@ -1,6 +1,5 @@
 import {disassemblePCode} from "./pcode";
 import {DirEntryType} from "./enums";
-import {detectVBAStomping} from "./vba_stomping_detection";
 import {byteArrayToStr, readByteArray, readInt} from "./file_processor";
 
 export class OLEFile {
@@ -59,7 +58,7 @@ export class OLEFile {
         } else {
             vbaFolder = this.fileTree.children.find(dir => dir.name.toUpperCase() === "VBA");
         }
-        const sourceCodes = [];
+
         if (vbaFolder) {
             const modules = [];
             let dirStream = null;
@@ -76,7 +75,6 @@ export class OLEFile {
                 }
             }
 
-            //todo why does decompression need arraybuffer instead of uint8array? change
             dirStream = this.decompressVBASourceCode(dirStream);
             const dirOffset = {value: 0};
 
@@ -103,12 +101,17 @@ export class OLEFile {
 
             dirOffset.value += 32;
 
-            dirOffset.value += 2;
-            const constantsSize = readInt(dirStream, dirOffset, 4);
-            dirOffset.value += constantsSize;
-            dirOffset.value += 2;
-            const constantsSizeUnicode = readInt(dirStream, dirOffset, 4);
-            dirOffset.value += constantsSizeUnicode;
+            // Optional constants field
+            const constantsId = readInt(dirStream, dirOffset, 2);
+            if (constantsId === 0x000C) {
+                const constantsSize = readInt(dirStream, dirOffset, 4);
+                dirOffset.value += constantsSize;
+                dirOffset.value += 2;
+                const constantsSizeUnicode = readInt(dirStream, dirOffset, 4);
+                dirOffset.value += constantsSizeUnicode;
+            } else {
+                dirOffset.value -= 2;
+            }
 
             //read project references record
             let attempt = 0;
@@ -136,7 +139,7 @@ export class OLEFile {
                     dirOffset.value += sizeLibidTwiddled;
                     dirOffset.value += 6;
                     const reserved = readInt(dirStream, dirOffset, 2);
-                    // Optional Name Record????
+                    // Optional Name Record
                     if (reserved === 0x0016) {
                         dirOffset.value -= 2;
                         readNameReference();
@@ -169,20 +172,24 @@ export class OLEFile {
 
             // reading modules records
             // we've already read the id
-            dirOffset.value += 4;
-            const count = readInt(dirStream, dirOffset, 2);
+            const countSize = readInt(dirStream, dirOffset, 4);
+            const count = readInt(dirStream, dirOffset, countSize);
             dirOffset.value += 8;
             const moduleRecordsArray = [];
             for (let i = 0; i < count; i++) {
                 //module name
-                dirOffset.value += 2;
+                const moduleNameId = readInt(dirStream, dirOffset, 2);
                 const moduleNameSize = readInt(dirStream, dirOffset, 4);
                 dirOffset.value += moduleNameSize;
 
-                //module name unicode
-                dirOffset.value += 2;
-                const moduleNameUnicodeSize = readInt(dirStream, dirOffset, 4);
-                dirOffset.value += moduleNameUnicodeSize;
+                //module name unicode OPTIONAL
+                const moduleNameUnicodeId = readInt(dirStream, dirOffset, 2);
+                if (moduleNameUnicodeId === 0x0047) {
+                    const moduleNameUnicodeSize = readInt(dirStream, dirOffset, 4);
+                    dirOffset.value += moduleNameUnicodeSize;
+                } else {
+                    dirOffset.value -= 2;
+                }
 
                 //module stream name
                 dirOffset.value += 2;
@@ -201,20 +208,41 @@ export class OLEFile {
                 dirOffset.value += docStringUnicodeSize;
 
                 //module offset
-                dirOffset.value += 2;
-                dirOffset.value += 4;
+                const sourceOffsetId = readInt(dirStream, dirOffset, 2);
+                const sourceOffsetSize = readInt(dirStream, dirOffset, 4);
+                if (sourceOffsetSize !== 4) console.log("SOURCE OFFSET SIZE != 4");
                 const sourceOffset = readInt(dirStream, dirOffset, 4);
 
-                dirStream.value += 10;
-                dirStream.value += 8;
-                dirStream.value += 6;
-                dirStream.value += 6;
-                dirStream.value += 6;
-                dirStream.value += 2;
-                dirStream.value += 4;
+                dirOffset.value += 10; // help context
+                dirOffset.value += 8; // module cookie
+
+                dirOffset.value += 6; // module type
+
+                // optional read only field
+                const readOnlyId = readInt(dirStream, dirOffset, 2);
+                if (readOnlyId === 0x0025) {
+                    dirOffset.value += 4;
+                } else {
+                    dirOffset.value -= 2;
+                }
+
+                // optional module private field
+                const privateId = readInt(dirStream, dirOffset, 2);
+                if (privateId === 0x0028) {
+                    dirOffset.value += 4;
+                } else {
+                    dirOffset.value -= 2;
+                }
+
+                dirOffset.value += 2; // terminator
+                dirOffset.value += 4; // reserved
 
                 //todo secondModule seems to be wrong? empty name and ridiculous offset
-                moduleRecordsArray.push({name: byteArrayToStr(streamName), sourceOffset: sourceOffset});
+                moduleRecordsArray.push({
+                    name: byteArrayToStr(streamName),
+                    sourceOffset: sourceOffset,
+                    nameUnicode: byteArrayToStr(streamNameUnicode)
+                });
             }
 
             this.macroModules = [];
@@ -225,10 +253,9 @@ export class OLEFile {
                 const moduleRecord = moduleRecordsArray.find(m => m.name.toUpperCase() === module.name.toUpperCase());
                 if (!moduleRecord) continue;
                 macroModule.name = moduleRecord.name;
-                const sourceOffset = moduleRecord.sourceOffset;
-                macroModule.sourceCode = byteArrayToStr(this.decompressVBASourceCode(dataArray.slice(sourceOffset)));
+                macroModule.sourceCode = byteArrayToStr(this.decompressVBASourceCode(dataArray.slice(moduleRecord.sourceOffset)));
                 macroModule.pcode = disassemblePCode(dataArray, vbaProjectStream);
-                console.log(detectVBAStomping(macroModule.pcode, macroModule.sourceCode));
+                //console.log(detectVBAStomping(macroModule.pcode, macroModule.sourceCode));
                 this.macroModules.push(macroModule);
             }
         }

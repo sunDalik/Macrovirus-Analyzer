@@ -66,10 +66,9 @@ export function disassemblePCode(moduleData, vbaProjectData) {
     dwLength = readInt(moduleData, offset, 4);
     offset.value = dwLength + 0x003C;
     offset.value += 4;
-    let numLines = readInt(moduleData, offset, 2);
+    const numLines = readInt(moduleData, offset, 2);
     const pcodeStart = offset.value + numLines * 12 + 10;
     const pcode = [];
-    console.log(numLines);
     for (let i = 0; i < numLines; i++) {
         offset.value += 4;
         const lineLength = readInt(moduleData, offset, 2);
@@ -897,7 +896,7 @@ function disasmVarArg(moduleData, identifiers, offset, wLength, mnemonic, vbaVer
     return varArgName;
 }
 
-function hexNum(int, places = 4) {
+export function hexNum(int, places = 4) {
     const numStr = Number(int).toString(16).toUpperCase();
     let result = "0x";
     for (let i = 0; i < places - numStr.length; i++) {

@@ -9,13 +9,11 @@ export function detectVBAStomping(pcode, sourceCode) {
             arg = tokens[1];
         }
 
-        console.log("mnem: " + mnemonic + ", arg: " + arg);
         if (['ArgsCall', 'ArgsLd', 'St', 'Ld', 'MemSt', 'Label'].includes(mnemonic)) {
             let keyword = arg;
             keywords.add(keyword);
         }
     }
-    console.log(keywords);
 
     for (const keyword of keywords.values()) {
         if (!sourceCode.includes(keyword)) {
