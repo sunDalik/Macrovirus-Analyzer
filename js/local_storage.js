@@ -2,7 +2,8 @@ export const STORAGE_SETTINGS = "macrovirus_settings";
 
 export const SETTINGS = Object.freeze({
     renameVariables: {key: "renameVariables", name: "Rename variables", defaultValue: true},
-    removeDeadCode: {key: "removeDeadCode", name: "Remove dead code", defaultValue: true}
+    removeDeadCode: {key: "removeDeadCode", name: "Remove dead code", defaultValue: true},
+    removeComments: {key: "removeComments", name: "Remove comments", defaultValue: false}
 });
 
 export function setupLocalStorage(reset = false) {

@@ -7,6 +7,7 @@ const forRegex = new RegExp(`^[ \\t]*For[ \\t]+(?<iteratorVariable>${varName})[ 
 
 const variableDeclarationRegex = new RegExp(`(^[ \\t]*(Set|Dim)[ \\t]+(?<variableName>${varName}).*?$)|(^[ \\t]*(?<variableName2>${varName})([ \\t]*\\(.+?\\))?[ \\t]*=.*?$)`);
 const functionDeclarationRegex = new RegExp(`^[ \\t]*((Public|Private)[ \\t]+)?(Function|Sub)[ \\t]+(?<functionName>${varName}).*?$`);
+const commentRegex = new RegExp(`^[ \\t]*\'.*$`);
 
 const blocks = [{start: "Sub", end: "End"},
     {start: "Function", end: "End"},
@@ -23,6 +24,7 @@ const blocks = [{start: "Sub", end: "End"},
 export function deobfuscateCode(code) {
     let deobfuscatedCode = code;
     deobfuscatedCode = shrinkSpaces(deobfuscatedCode);
+    if (readSetting(SETTINGS.removeComments)) deobfuscatedCode = removeComments(deobfuscatedCode);
     if (readSetting(SETTINGS.removeDeadCode)) deobfuscatedCode = removeDeadCode(deobfuscatedCode);
     if (readSetting(SETTINGS.renameVariables)) deobfuscatedCode = renameVariables(deobfuscatedCode);
     deobfuscatedCode = indentCode(deobfuscatedCode);
@@ -74,6 +76,17 @@ function indentCode(code) {
 
 // lower case
 const autoExecFunctions = ["document_open"];
+
+function removeComments(code) {
+    const newCodeLines = [];
+    let codeLines = code.split("\n");
+    for (const line of codeLines) {
+        if (!line.match(commentRegex)) {
+            newCodeLines.push(line);
+        }
+    }
+    return newCodeLines.join("\n");
+}
 
 function renameVariables(code) {
     //todo block-aware renaming?
