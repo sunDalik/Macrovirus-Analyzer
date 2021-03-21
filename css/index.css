@@ -8,6 +8,8 @@
     --black-color: #1B1F3B;
     --blue-color: #454ADE;
     --white-color: #FFFFFF;
+    --border: var(--border-size) solid var(--black-color);
+    --button-transition-time: 0.08s;
 }
 
 html {
@@ -23,7 +25,7 @@ body {
 }
 
 .blue-bg {
-    position: absolute;
+    position: fixed;
     top: 0;
     z-index: -1;
     height: 80%;
@@ -57,7 +59,7 @@ body {
     justify-content: center;
     margin-top: 100px;
     cursor: pointer;
-    transition: margin-top 0.3s ease-out;
+    transition: margin-top 0.3s ease-out, box-shadow 0.3s;
     box-shadow: 0 0 20px 0 #00000075;
     border-radius: var(--border-radius);
 }
@@ -67,9 +69,8 @@ body {
     background-color: var(--black-color);
     font-weight: bold;
     color: white;
-    --transition-time: 0.08s;
-    transition: background-color var(--transition-time), box-shadow var(--transition-time), color var(--transition-time), transform var(--transition-time);
-    border: solid var(--border-size) var(--black-color);
+    transition: background-color var(--button-transition-time), box-shadow var(--button-transition-time), color var(--button-transition-time), transform var(--button-transition-time);
+    border: var(--border);
     border-radius: 0 var(--border-radius) var(--border-radius) 0;
 }
 
@@ -81,7 +82,7 @@ body {
 }
 
 .file-input-text {
-    border: var(--border-size) solid black;
+    border: var(--border);
     overflow: hidden;
     background-color: white;
     width: 250px;
@@ -98,12 +99,11 @@ body {
 }
 
 .tab-contents {
-    border: var(--border-size) solid black;
+    border: var(--border);
     /*padding: 15px 10px 10px;*/
     padding-top: 5px;
     background-color: white;
     position: relative;
-    top: -1px;
     border-radius: 0 0 var(--border-radius) var(--border-radius);
 }
 
@@ -117,7 +117,7 @@ body {
     z-index: 2;
     position: relative;
     display: table-cell;
-    border: var(--border-size) solid black;
+    border: var(--border);
     border-bottom: none;
     border-radius: var(--border-radius) var(--border-radius) 0 0;
     background-color: white;
@@ -125,11 +125,21 @@ body {
     margin-right: 10px;
     cursor: pointer;
     text-align: center;
+    color: var(--black-color);
+    font-weight: bold;
+    transition: background-color var(--button-transition-time), color var(--button-transition-time);
 }
 
 .inactive-tab {
-    background-color: #eeeeee;
-    border-bottom: var(--border-size) solid black;
+    background-color: var(--black-color);
+    color: white;
+    font-weight: bold;
+    border-bottom: var(--border);
+}
+
+.inactive-tab:hover {
+    color: var(--black-color);
+    background-color: var(--white-color);
 }
 
 .hidden {
@@ -162,7 +172,7 @@ body {
 }
 
 .module-separator {
-    border-bottom: 1px solid black;
+    border-bottom: var(--border);
 }
 
 .module-header {

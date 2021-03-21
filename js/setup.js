@@ -23,6 +23,7 @@ fileSelector.addEventListener("input", e => {
         if (file === null) continue;
         fileNameSpan.innerText = file.name;
         fakeFileSelector.style.marginTop = "50px";
+        fakeFileSelector.style.boxShadow = "none";
         logo.style.marginTop = "-70px";
         logo.style.opacity = "0";
         mainTable.classList.remove("hidden");
