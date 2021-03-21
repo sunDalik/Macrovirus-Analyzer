@@ -9,6 +9,7 @@ setupLocalStorage();
 
 const fileSelector = document.getElementById('file-selector');
 const fakeFileSelector = document.getElementById('fake-file-selector');
+const logo = document.getElementById('logo');
 const analysisTab = document.getElementById('tab1');
 const sourceCodeTab = document.getElementById('tab2');
 const deobfuscatedCodeTab = document.getElementById('tab3');
@@ -22,6 +23,8 @@ fileSelector.addEventListener("input", e => {
         if (file === null) continue;
         fileNameSpan.innerText = file.name;
         fakeFileSelector.style.marginTop = "50px";
+        logo.style.marginTop = "-70px";
+        logo.style.opacity = "0";
         mainTable.classList.remove("hidden");
         /*
         const reader = new FileReader();

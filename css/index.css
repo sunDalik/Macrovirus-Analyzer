@@ -24,10 +24,21 @@ body {
 
 .blue-bg {
     position: absolute;
+    top: 0;
     z-index: -1;
     height: 80%;
     width: 100%;
     background-color: var(--blue-color);
+}
+
+#logo {
+    margin-top: 50px;
+    font-size: 60px;
+    color: var(--white-color);
+    font-weight: bold;
+    text-shadow: 2px 2px 0 var(--black-color);
+    text-align: center;
+    transition: margin-top 0.3s, opacity 0.2s;
 }
 
 .real-file-input {
@@ -44,7 +55,7 @@ body {
     display: inline-flex;
     flex-direction: row;
     justify-content: center;
-    margin-top: 200px;
+    margin-top: 100px;
     cursor: pointer;
     transition: margin-top 0.3s ease-out;
     box-shadow: 0 0 20px 0 #00000075;
@@ -71,6 +82,7 @@ body {
 
 .file-input-text {
     border: var(--border-size) solid black;
+    overflow: hidden;
     background-color: white;
     width: 250px;
     border-radius: var(--border-radius) 0 0 var(--border-radius);
@@ -78,7 +90,6 @@ body {
 
 .file-input-text, .file-input-button {
     padding: 8px 12px;
-    font-size: 20px;
 }
 
 .main-table {
