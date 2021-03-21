@@ -1,18 +1,25 @@
 import JSZip from "jszip";
 import {analyzeCode} from "./analysis";
 import {deobfuscateCode} from "./deobfuscation";
-import {setupLocalStorage} from "./local_storage";
+import {readSetting, SETTINGS, setupLocalStorage, writeSetting} from "./local_storage";
 import {OLEFile} from "./OLEFile";
 
 global = window;
 setupLocalStorage();
 
+let activeFileId = 0;
+const openedFiles = [];
+
 const fileSelector = document.getElementById('file-selector');
 const fakeFileSelector = document.getElementById('fake-file-selector');
+const deobfuscationMenu = document.getElementById('deobfuscation-menu');
 const logo = document.getElementById('logo');
+
+//TODO you shouldnt access tabs by ID
 const analysisTab = document.getElementById('tab1');
 const sourceCodeTab = document.getElementById('tab2');
 const deobfuscatedCodeTab = document.getElementById('tab3');
+
 const fileNameSpan = document.getElementById('filename-display');
 const mainTable = document.getElementsByClassName('main-table')[0];
 
@@ -73,6 +80,10 @@ fileSelector.addEventListener("input", e => {
 
 function displayResults(binaryArray) {
     const oleFile = new OLEFile(binaryArray);
+    openedFiles.push(oleFile);
+    activeFileId = oleFile.id;
+    //TODO create NEW tabs for each file
+    document.getElementsByClassName("tabs")[0].dataset.fileId = oleFile.id;
     tabTextElement(sourceCodeTab).innerHTML = "";
     tabTextElement(analysisTab).innerHTML = "";
     tabTextElement(deobfuscatedCodeTab).innerHTML = "";
@@ -84,8 +95,6 @@ function displayResults(binaryArray) {
     }
 
     //macroSourceCodes = [ss_code];
-
-    const deobfuscatedCodes = [];
 
     for (let i = 0; i < oleFile.macroModules.length; i++) {
         const module = oleFile.macroModules[i];
@@ -111,10 +120,25 @@ function displayResults(binaryArray) {
         div2.classList.add("table-module");
         tabTextElement(analysisTab).appendChild(div2);
 
-        const div3 = document.createElement("div");
-        div3.innerHTML = deobfuscateCode(removeAttributes(macroSourceCode));
-        div3.classList.add("table-module");
-        div3.classList.add("code");
+        if (i < oleFile.macroModules.length - 1) {
+            div.classList.add("module-separator");
+            div2.classList.add("module-separator");
+        }
+    }
+
+    deobfuscateModulesAndShow(oleFile.macroModules);
+}
+
+function deobfuscateModulesAndShow(macroModules) {
+    tabTextElement(deobfuscatedCodeTab).innerHTML = "";
+    for (let i = 0; i < macroModules.length; i++) {
+        const module = macroModules[i];
+        let macroSourceCode = module.sourceCode;
+
+        const div = document.createElement("div");
+        div.innerHTML = deobfuscateCode(removeAttributes(macroSourceCode));
+        div.classList.add("table-module");
+        div.classList.add("code");
         if (module.name !== "") {
             const header = document.createElement("div");
             header.classList.add("module-header");
@@ -122,13 +146,10 @@ function displayResults(binaryArray) {
             header.innerHTML = module.name;
             tabTextElement(deobfuscatedCodeTab).appendChild(header);
         }
-        tabTextElement(deobfuscatedCodeTab).appendChild(div3);
-        deobfuscatedCodes.push(div3.innerHTML);
+        tabTextElement(deobfuscatedCodeTab).appendChild(div);
 
-        if (i < oleFile.macroModules.length - 1) {
+        if (i < macroModules.length - 1) {
             div.classList.add("module-separator");
-            div2.classList.add("module-separator");
-            div3.classList.add("module-separator");
         }
     }
 }
@@ -191,4 +212,26 @@ function removeAttributes(code) {
         }
     }
     return codeArray.join("");
+}
+
+// Init deobfuscation menu
+for (const setting of Object.values(SETTINGS)) {
+    const div = document.createElement("div");
+    const checkbox = document.createElement("input");
+    checkbox.setAttribute("type", "checkbox");
+    checkbox.checked = readSetting(setting);
+    checkbox.id = setting.key + "-checkbox";
+    div.append(checkbox);
+
+    const label = document.createElement("label");
+    label.setAttribute("for", checkbox.id);
+    div.append(label);
+
+    label.innerText = setting.name;
+    deobfuscationMenu.append(div);
+
+    checkbox.addEventListener("change", e => {
+        writeSetting(setting, e.target.checked);
+        deobfuscateModulesAndShow(openedFiles.find(f => f.id === activeFileId).macroModules);
+    });
 }

@@ -2,8 +2,11 @@ import {disassemblePCode} from "./pcode";
 import {DirEntryType} from "./enums";
 import {byteArrayToStr, readByteArray, readInt} from "./file_processor";
 
+let FILE_ID = 0;
+
 export class OLEFile {
     constructor(binContent) {
+        this.id = FILE_ID++;
         this.sectorSize = 512;
         this.miniSectorSize = 64;
         this.miniStreamCutoff = 4096;
