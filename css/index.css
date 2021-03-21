@@ -1,14 +1,33 @@
 :root {
-    --border-radius: 8px;
-    --border-size: 1px;
+    --border-radius: 5px;
+    --border-size: 2px;
+    --button-hover-offset: -2px;
+    --button-drop-shadow-size: 2px;
     --default-font-family: 'Roboto', sans-serif;
     --green-color: #91CF0F;
+    --black-color: #1B1F3B;
+    --blue-color: #454ADE;
+    --white-color: #FFFFFF;
 }
 
 html {
     font-size: 16px;
     font-family: var(--default-font-family);
-    background-color: #fcfff6;
+    /*background-color: #fcfff6;*/
+    background-color: var(--black-color);
+    overflow-x: hidden;
+}
+
+body {
+    margin: 0;
+}
+
+.blue-bg {
+    position: absolute;
+    z-index: -1;
+    height: 80%;
+    width: 100%;
+    background-color: var(--blue-color);
 }
 
 .real-file-input {
@@ -31,21 +50,32 @@ html {
 }
 
 .file-input-button {
-    border-radius: 0 var(--border-radius) var(--border-radius) 0;
-    background-color: var(--green-color);
+    position: relative;
+    background-color: var(--black-color);
     font-weight: bold;
     color: white;
+    --transition-time: 0.08s;
+    transition: background-color var(--transition-time), box-shadow var(--transition-time), color var(--transition-time), transform var(--transition-time);
+    border: solid var(--border-size) var(--black-color);
+    border-radius: 0 var(--border-radius) var(--border-radius) 0;
+}
+
+.file-input-button:hover {
+    box-shadow: var(--button-drop-shadow-size) var(--button-drop-shadow-size) 0 var(--button-drop-shadow-size) var(--black-color);
+    transform: translate(var(--button-hover-offset), var(--button-hover-offset));
+    color: var(--black-color);
+    background-color: var(--white-color);
 }
 
 .file-input-text {
     border: var(--border-size) solid black;
     background-color: white;
-    border-radius: var(--border-radius) 0 0 var(--border-radius);
     width: 250px;
 }
 
 .file-input-text, .file-input-button {
     padding: 8px 12px;
+    font-size: 20px;
 }
 
 .main-table {
