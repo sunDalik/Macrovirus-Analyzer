@@ -1,5 +1,5 @@
 :root {
-    --border-radius: 5px;
+    --border-radius: 6px;
     --border-size: 2px;
     --button-hover-offset: -2px;
     --button-drop-shadow-size: 2px;
@@ -119,7 +119,6 @@ body {
     display: table-cell;
     border: var(--border);
     border-bottom: none;
-    border-radius: var(--border-radius) var(--border-radius) 0 0;
     background-color: white;
     padding: 10px 14px;
     margin-right: 10px;
@@ -128,6 +127,14 @@ body {
     color: var(--black-color);
     font-weight: bold;
     transition: background-color var(--button-transition-time), color var(--button-transition-time);
+}
+
+.tab-selector:first-child {
+    border-radius: var(--border-radius) 0 0 0;
+}
+
+.tab-selector:last-child {
+    border-radius: 0 var(--border-radius) 0 0;
 }
 
 .inactive-tab {
