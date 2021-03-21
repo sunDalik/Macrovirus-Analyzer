@@ -47,6 +47,8 @@ body {
     margin-top: 200px;
     cursor: pointer;
     transition: margin-top 0.3s ease-out;
+    box-shadow: 0 0 20px 0 #00000075;
+    border-radius: var(--border-radius);
 }
 
 .file-input-button {
@@ -71,6 +73,7 @@ body {
     border: var(--border-size) solid black;
     background-color: white;
     width: 250px;
+    border-radius: var(--border-radius) 0 0 var(--border-radius);
 }
 
 .file-input-text, .file-input-button {
