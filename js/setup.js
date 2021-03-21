@@ -96,6 +96,7 @@ function displayResults(binaryArray) {
         const div = document.createElement("div");
         div.innerHTML = removeAttributes(macroSourceCode);
         div.classList.add("table-module");
+        div.classList.add("code");
         if (module.name !== "") {
             const header = document.createElement("div");
             header.classList.add("module-header");
@@ -113,6 +114,7 @@ function displayResults(binaryArray) {
         const div3 = document.createElement("div");
         div3.innerHTML = deobfuscateCode(removeAttributes(macroSourceCode));
         div3.classList.add("table-module");
+        div3.classList.add("code");
         if (module.name !== "") {
             const header = document.createElement("div");
             header.classList.add("module-header");
