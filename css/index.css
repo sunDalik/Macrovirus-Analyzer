@@ -1,8 +1,8 @@
 :root {
     --border-radius: 6px;
     --border-size: 2px;
-    --button-hover-offset: -2px;
-    --button-drop-shadow-size: 2px;
+    --button-hover-offset: -1px;
+    --button-drop-shadow-size: 1px;
     --default-font-family: 'Roboto', sans-serif;
     --green-color: #91CF0F;
     --black-color: #1B1F3B;
@@ -138,7 +138,7 @@ body {
     text-align: center;
     color: var(--black-color);
     font-weight: bold;
-    transition: background-color var(--button-transition-time), color var(--button-transition-time);
+    transition: background-color var(--button-transition-time), box-shadow var(--button-transition-time), color var(--button-transition-time), transform var(--button-transition-time);
 }
 
 .tab-selector:first-child {
@@ -158,6 +158,8 @@ body {
 .inactive-tab:hover {
     color: var(--black-color);
     background-color: var(--white-color);
+    box-shadow: 0 var(--button-drop-shadow-size) 0 0 var(--black-color);
+    transform: translate(0, var(--button-hover-offset));
 }
 
 .hidden {
