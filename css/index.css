@@ -10,6 +10,7 @@
     --white-color: #FFFFFF;
     --border: var(--border-size) solid var(--black-color);
     --button-transition-time: 0.08s;
+    --main-table-width: 70%;
 }
 
 html {
@@ -62,6 +63,7 @@ body {
     transition: margin-top 0.3s ease-out, box-shadow 0.3s;
     box-shadow: 0 0 20px 0 #00000075;
     border-radius: var(--border-radius);
+    max-width: var(--main-table-width);
 }
 
 .file-input-button {
@@ -85,7 +87,7 @@ body {
     border: var(--border);
     overflow: hidden;
     background-color: white;
-    width: 250px;
+    min-width: 250px;
     border-radius: var(--border-radius) 0 0 var(--border-radius);
 }
 
@@ -94,7 +96,7 @@ body {
 }
 
 .main-table {
-    width: 70%;
+    width: var(--main-table-width);
     margin: 20px auto auto;
 }
 
