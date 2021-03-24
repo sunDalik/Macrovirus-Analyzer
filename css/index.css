@@ -199,3 +199,8 @@ body {
 .module-header {
     font-weight: bold;
 }
+
+.malicious-keyword {
+    color: #db3c3c;
+    font-weight: bold;
+}

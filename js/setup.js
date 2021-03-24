@@ -3,6 +3,7 @@ import {analyzeCode} from "./analysis";
 import {deobfuscateCode} from "./deobfuscation";
 import {readSetting, SETTINGS, setupLocalStorage, writeSetting} from "./local_storage";
 import {OLEFile} from "./OLEFile";
+import {pcodeToSource} from "./pcode2";
 
 global = window;
 setupLocalStorage();
@@ -104,6 +105,7 @@ function displayResults(binaryArray) {
 
         const div = document.createElement("div");
         div.innerHTML = removeAttributes(macroSourceCode);
+        //div.innerHTML = pcodeToSource(module.pcode); //PCODE2 DEBUG
         div.classList.add("table-module");
         div.classList.add("code");
         if (module.name !== "") {
@@ -115,8 +117,10 @@ function displayResults(binaryArray) {
         }
         tabTextElement(sourceCodeTab).appendChild(div);
 
+
         const div2 = document.createElement("div");
         div2.innerHTML = analyzeCode(macroSourceCode, module.pcode);
+        //div2.innerHTML = module.pcode.join("\n"); //PCODE2 DEBUG
         div2.classList.add("table-module");
         tabTextElement(analysisTab).appendChild(div2);
 
@@ -137,6 +141,7 @@ function deobfuscateModulesAndShow(macroModules) {
 
         const div = document.createElement("div");
         div.innerHTML = deobfuscateCode(removeAttributes(macroSourceCode));
+        //div.innerHTML = removeAttributes(module.sourceCode); //PCODE2 DEBUG
         div.classList.add("table-module");
         div.classList.add("code");
         if (module.name !== "") {
