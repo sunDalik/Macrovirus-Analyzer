@@ -89,9 +89,21 @@ function displayResults(binaryArray) {
     tabTextElement(analysisTab).innerHTML = "";
     tabTextElement(deobfuscatedCodeTab).innerHTML = "";
     if (oleFile.macroModules.length === 0) {
-        tabTextElement(analysisTab).innerHTML = "Module is safe!\n(No macro scripts detected)";
-        tabTextElement(sourceCodeTab).innerHTML = "<i>No macro scripts detected</i>";
-        tabTextElement(deobfuscatedCodeTab).innerHTML = "<i>No macro scripts detected</i>";
+
+        let div = document.createElement("div");
+        div.innerHTML = "Module is safe!\n(No macro scripts detected)";
+        div.classList.add("table-module");
+        tabTextElement(analysisTab).appendChild(div);
+
+        div = document.createElement("div");
+        div.innerHTML = "<i>No macro scripts detected</i>";
+        div.classList.add("table-module");
+        sourceCodeTab.querySelectorAll(".tab-text .direct-child")[0].appendChild(div);
+
+        div = document.createElement("div");
+        div.innerHTML = "<i>No macro scripts detected</i>";
+        div.classList.add("table-module");
+        tabTextElement(deobfuscatedCodeTab).appendChild(div);
         return;
     }
 
