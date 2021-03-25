@@ -37,10 +37,28 @@
             <div class="tab-text"></div>
         </div>
         <div id="tab2" class="tab-contents">
-            <div class="tab-text"></div>
+            <div id="code-comparison-menu" class="sub-menu">
+                <div>
+                    <input type="checkbox" id="code-split-option">
+                    <label for="code-split-option">Compare with p-code</label>
+                </div>
+
+                <div class="indent-small">
+                    <input type="radio" name="pcode-radio" id="pcode-radio-1" disabled checked>
+                    <label for="pcode-radio-1">Disassembled p-code</label>
+                </div>
+                <div class="indent-small">
+                    <input type="radio" name="pcode-radio" id="pcode-radio-2" disabled>
+                    <label for="pcode-radio-2">Decompiled p-code</label>
+                </div>
+            </div>
+            <div class="tab-text flexbox">
+                <div class="direct-child flex-child"></div>
+                <div class="direct-child"></div>
+            </div>
         </div>
         <div id="tab3" class="tab-contents">
-            <div id="deobfuscation-menu"></div>
+            <div id="deobfuscation-menu" class="sub-menu"></div>
             <div class="tab-text"></div>
         </div>
     </div>

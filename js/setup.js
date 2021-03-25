@@ -85,7 +85,7 @@ function displayResults(binaryArray) {
     activeFileId = oleFile.id;
     //TODO create NEW tabs for each file
     document.getElementsByClassName("tabs")[0].dataset.fileId = oleFile.id;
-    tabTextElement(sourceCodeTab).innerHTML = "";
+    tabTextElement(sourceCodeTab).innerHTML = "<div class=\"direct-child flex-child\"></div><div class=\"direct-child\"></div>";
     tabTextElement(analysisTab).innerHTML = "";
     tabTextElement(deobfuscatedCodeTab).innerHTML = "";
     if (oleFile.macroModules.length === 0) {
@@ -113,10 +113,9 @@ function displayResults(binaryArray) {
             header.classList.add("module-header");
             header.classList.add("table-module");
             header.innerHTML = module.name;
-            tabTextElement(sourceCodeTab).appendChild(header);
+            sourceCodeTab.querySelectorAll(".tab-text .direct-child")[0].appendChild(header);
         }
-        tabTextElement(sourceCodeTab).appendChild(div);
-
+        sourceCodeTab.querySelectorAll(".tab-text .direct-child")[0].appendChild(div);
 
         const div2 = document.createElement("div");
         div2.innerHTML = analyzeCode(macroSourceCode, module.pcode);
@@ -239,4 +238,61 @@ for (const setting of Object.values(SETTINGS)) {
         writeSetting(setting, e.target.checked);
         deobfuscateModulesAndShow(openedFiles.find(f => f.id === activeFileId).macroModules);
     });
+}
+
+document.getElementById("code-split-option").addEventListener("change", e => {
+    if (e.target.checked) {
+        document.getElementById("pcode-radio-1").disabled = false;
+        document.getElementById("pcode-radio-2").disabled = false;
+
+        const file = openedFiles.find(f => f.id === activeFileId);
+        for (let i = 0; i < file.macroModules.length; i++) {
+            const module = file.macroModules[i];
+
+            const div = document.createElement("div");
+            if (document.getElementById("pcode-radio-1").checked) {
+                div.innerHTML = module.pcode.join("\n");
+            } else {
+                div.innerHTML = pcodeToSource(module.pcode);
+            }
+
+            div.classList.add("table-module");
+            div.classList.add("code");
+            if (module.name !== "") {
+                const header = document.createElement("div");
+                header.classList.add("module-header");
+                header.classList.add("table-module");
+                header.innerHTML = module.name;
+                sourceCodeTab.querySelectorAll(".tab-text .direct-child")[1].appendChild(header);
+            }
+            sourceCodeTab.querySelectorAll(".tab-text .direct-child")[1].appendChild(div);
+            sourceCodeTab.querySelectorAll(".tab-text .direct-child")[1].classList.add("border-left");
+            sourceCodeTab.querySelectorAll(".tab-text .direct-child")[1].classList.add("flex-child");
+
+
+            if (i < file.macroModules.length - 1) {
+                div.classList.add("module-separator");
+            }
+        }
+
+    } else {
+        document.getElementById("pcode-radio-1").disabled = true;
+        document.getElementById("pcode-radio-2").disabled = true;
+        const elements = document.querySelectorAll("#tab2 .tab-text .direct-child");
+        elements[1].innerHTML = "";
+        sourceCodeTab.querySelectorAll(".tab-text .direct-child")[1].classList.remove("border-left");
+        sourceCodeTab.querySelectorAll(".tab-text .direct-child")[1].classList.remove("flex-child");
+    }
+});
+
+document.getElementById("pcode-radio-1").addEventListener("change", e => resplitCode(e));
+document.getElementById("pcode-radio-2").addEventListener("change", e => resplitCode(e));
+
+function resplitCode(e) {
+    if (e.target.checked) {
+        if (document.getElementById("code-split-option").checked) {
+            document.getElementById("code-split-option").click();
+            document.getElementById("code-split-option").click();
+        }
+    }
 }

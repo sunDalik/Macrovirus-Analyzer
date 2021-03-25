@@ -100,7 +100,7 @@ body {
     margin: 20px auto auto;
 }
 
-#deobfuscation-menu {
+.sub-menu {
     position: fixed;
     right: 0;
     width: 12%;
@@ -110,10 +110,22 @@ body {
     border-right: none;
 }
 
+input:disabled + label {
+    color: #CCCCCC;
+}
+
+.indent-small {
+    margin-left: 15px;
+}
+
+.flexbox {
+    display: flex;
+    flex-direction: row;
+}
+
 .tab-contents {
     border: var(--border);
     /*padding: 15px 10px 10px;*/
-    padding-top: 5px;
     background-color: white;
     position: relative;
     border-radius: 0 0 var(--border-radius) var(--border-radius);
@@ -188,6 +200,14 @@ body {
     word-break: break-all;
 }
 
+.flex-child {
+    flex-basis: 100%;
+}
+
+.border-left {
+    border-left: var(--border);
+}
+
 .table-module {
     padding: 10px 10px 10px;
 }
@@ -198,6 +218,10 @@ body {
 
 .module-header {
     font-weight: bold;
+}
+
+.table-module:first-child {
+    padding-top: 15px;
 }
 
 .malicious-keyword {
