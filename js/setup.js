@@ -1,7 +1,7 @@
 import JSZip from "jszip";
 import {analyzeCode} from "./analysis";
 import {deobfuscateCode} from "./deobfuscation";
-import {readSetting, SETTINGS, setupLocalStorage, writeSetting} from "./local_storage";
+import {DEOBFUSCATION_SETTINGS, readSetting, SETTINGS, setupLocalStorage, writeSetting} from "./local_storage";
 import {OLEFile} from "./OLEFile";
 import {pcodeToSource} from "./pcode2";
 
@@ -231,7 +231,7 @@ function removeAttributes(code) {
 }
 
 // Init deobfuscation menu
-for (const setting of Object.values(SETTINGS)) {
+for (const setting of DEOBFUSCATION_SETTINGS) {
     const div = document.createElement("div");
     const checkbox = document.createElement("input");
     checkbox.setAttribute("type", "checkbox");
@@ -253,11 +253,13 @@ for (const setting of Object.values(SETTINGS)) {
 }
 
 document.getElementById("code-split-option").addEventListener("change", e => {
+    writeSetting(SETTINGS.compareCode, e.target.checked);
     if (e.target.checked) {
         document.getElementById("pcode-radio-1").disabled = false;
         document.getElementById("pcode-radio-2").disabled = false;
 
         const file = openedFiles.find(f => f.id === activeFileId);
+        if (!file) return;
         for (let i = 0; i < file.macroModules.length; i++) {
             const module = file.macroModules[i];
 
@@ -297,14 +299,31 @@ document.getElementById("code-split-option").addEventListener("change", e => {
     }
 });
 
-document.getElementById("pcode-radio-1").addEventListener("change", e => resplitCode(e));
-document.getElementById("pcode-radio-2").addEventListener("change", e => resplitCode(e));
-
-function resplitCode(e) {
+document.getElementById("pcode-radio-1").addEventListener("change", e => {
     if (e.target.checked) {
-        if (document.getElementById("code-split-option").checked) {
-            document.getElementById("code-split-option").click();
-            document.getElementById("code-split-option").click();
-        }
+        writeSetting(SETTINGS.compareWithDecompiledCode, false);
+        resplitCode();
     }
+});
+document.getElementById("pcode-radio-2").addEventListener("change", e => {
+    if (e.target.checked) {
+        writeSetting(SETTINGS.compareWithDecompiledCode, true);
+        resplitCode();
+    }
+});
+
+function resplitCode() {
+    if (document.getElementById("code-split-option").checked) {
+        document.getElementById("code-split-option").click();
+        document.getElementById("code-split-option").click();
+    }
+}
+
+// Init code comparison menu
+if (readSetting(SETTINGS.compareCode)) {
+    document.getElementById("code-split-option").click();
+}
+
+if (readSetting(SETTINGS.compareWithDecompiledCode)) {
+    document.getElementById("pcode-radio-2").checked = true;
 }
