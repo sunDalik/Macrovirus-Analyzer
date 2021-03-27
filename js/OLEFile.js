@@ -1,6 +1,7 @@
 import {disassemblePCode} from "./pcode";
 import {DirEntryType} from "./enums";
 import {byteArrayToStr, readByteArray, readInt} from "./file_processor";
+import {parseVBAFunctions} from "./analysis";
 
 let FILE_ID = 0;
 
@@ -18,6 +19,9 @@ export class OLEFile {
         this.fileTree = {};
         this.binContent = binContent;
         this.readFile(this.binContent);
+
+        // Code analysis Data
+        this.VBAFunctions = parseVBAFunctions(this); //function {id, name, dependencies(ids)}
     }
 
     readFile(binContent) {

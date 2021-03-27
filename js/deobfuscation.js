@@ -2,12 +2,13 @@ import {readSetting, SETTINGS} from "./local_storage";
 
 const varName = "[A-Za-z][A-Za-z0-9_\-]*";
 
-const functionRegex = new RegExp(`^[ \\t]*(Public|Private|)[ \\t]*(Sub|Function)[ \\t]+(?<functionName>${varName})[ \\t]*\\(.*\\)[ \\t]*$`);
+export const functionRegex = new RegExp(`^[ \\t]*(Public|Private|)[ \\t]*(Sub|Function)[ \\t]+(?<functionName>${varName})[ \\t]*\\(.*\\)[ \\t]*$`, 'm');
 const forRegex = new RegExp(`^[ \\t]*For[ \\t]+(?<iteratorVariable>${varName})[ \\t]*=[ \\t]*$`);
 
 const variableDeclarationRegex = new RegExp(`(^[ \\t]*(Set|Dim)[ \\t]+(?<variableName>${varName}).*?$)|(^[ \\t]*(?<variableName2>${varName})([ \\t]*\\(.+?\\))?[ \\t]*=.*?$)`);
 const functionDeclarationRegex = new RegExp(`^[ \\t]*((Public|Private)[ \\t]+)?(Function|Sub)[ \\t]+(?<functionName>${varName}).*?$`);
 const commentRegex = new RegExp(`^(?<before_comment>(?:[^"]*?"[^"]*?")*?[^"]*?)(?<comment>'.*)$`);
+const lineBreakRegex = new RegExp(` _(\r\n|\r|\n)`, "g");
 
 const blocks = [{start: "Sub", end: "End"},
     {start: "Function", end: "End"},
@@ -23,6 +24,7 @@ const blocks = [{start: "Sub", end: "End"},
 
 export function deobfuscateCode(code) {
     let deobfuscatedCode = code;
+    //TODO allow preserving original indentation?
     deobfuscatedCode = shrinkSpaces(deobfuscatedCode);
     if (readSetting(SETTINGS.removeComments)) deobfuscatedCode = removeComments(deobfuscatedCode);
     if (readSetting(SETTINGS.removeDeadCode)) deobfuscatedCode = removeDeadCode(deobfuscatedCode);
@@ -45,6 +47,7 @@ function shrinkSpaces(code) {
 }
 
 function indentCode(code) {
+    //TODO allow changing indent symbol (e.g. 2 spaces instead of 4)
     const blockIndent = "    ";
     let blockStack = [];
 
@@ -83,6 +86,10 @@ export function removeComments(code) {
         codeLines[i] = codeLines[i].replace(commentRegex, "$<before_comment>");
     }
     return codeLines.join("\n");
+}
+
+export function collapseLongLines(code) {
+    return code.replaceAll(lineBreakRegex, " ");
 }
 
 function renameVariables(code) {

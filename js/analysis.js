@@ -1,4 +1,5 @@
 import {detectVBAStomping} from "./vba_stomping_detection";
+import {functionRegex} from "./deobfuscation";
 
 const suspiciousWords = [
     // Auto execution triggers
@@ -46,4 +47,19 @@ export function analyzeCode(sourceCode, pcode) {
         }
     }
     return output;
+}
+
+export function parseVBAFunctions(oleFile) {
+    const VBAFunctions = [];
+    let id = 0;
+    for (const module of oleFile.macroModules) {
+        for (const line of module.sourceCode.split("\n")) {
+            const matchResult = line.match(functionRegex);
+            if (matchResult && matchResult.groups) {
+                VBAFunctions.push({id: id++, name: matchResult.groups.functionName, dependencies: []});
+            }
+        }
+    }
+    console.log(VBAFunctions);
+    return VBAFunctions;
 }
