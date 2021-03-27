@@ -7,7 +7,7 @@ const forRegex = new RegExp(`^[ \\t]*For[ \\t]+(?<iteratorVariable>${varName})[ 
 
 const variableDeclarationRegex = new RegExp(`(^[ \\t]*(Set|Dim)[ \\t]+(?<variableName>${varName}).*?$)|(^[ \\t]*(?<variableName2>${varName})([ \\t]*\\(.+?\\))?[ \\t]*=.*?$)`);
 const functionDeclarationRegex = new RegExp(`^[ \\t]*((Public|Private)[ \\t]+)?(Function|Sub)[ \\t]+(?<functionName>${varName}).*?$`);
-const commentRegex = new RegExp(`^[ \\t]*\'.*$`);
+const commentRegex = new RegExp(`^(?<before_comment>(?:[^"]*?"[^"]*?")*?[^"]*?)(?<comment>'.*)$`);
 
 const blocks = [{start: "Sub", end: "End"},
     {start: "Function", end: "End"},
@@ -77,15 +77,12 @@ function indentCode(code) {
 // lower case
 const autoExecFunctions = ["document_open"];
 
-function removeComments(code) {
-    const newCodeLines = [];
+export function removeComments(code) {
     let codeLines = code.split("\n");
-    for (const line of codeLines) {
-        if (!line.match(commentRegex)) {
-            newCodeLines.push(line);
-        }
+    for (let i = 0; i < codeLines.length; i++) {
+        codeLines[i] = codeLines[i].replace(commentRegex, "$<before_comment>");
     }
-    return newCodeLines.join("\n");
+    return codeLines.join("\n");
 }
 
 function renameVariables(code) {
