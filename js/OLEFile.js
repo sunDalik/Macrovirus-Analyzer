@@ -21,7 +21,7 @@ export class OLEFile {
         this.readFile(this.binContent);
 
         // Code analysis Data
-        this.VBAFunctions = parseVBAFunctions(this); //function {id, name, dependencies(ids)}
+        this.VBAFunctions = parseVBAFunctions(this); //function {id, name, dependencies(ids), body(array of lines)}
     }
 
     readFile(binContent) {

@@ -2,11 +2,12 @@ import {readSetting, SETTINGS} from "./local_storage";
 
 const varName = "[A-Za-z][A-Za-z0-9_\-]*";
 
-export const functionRegex = new RegExp(`^[ \\t]*(Public|Private|)[ \\t]*(Sub|Function)[ \\t]+(?<functionName>${varName})[ \\t]*\\(.*\\)[ \\t]*$`, 'm');
+export const functionDeclarationRegex = new RegExp(`^[ \\t]*((Public|Private)[ \\t]+)?(Sub|Function)[ \\t]+(?<functionName>${varName})[ \\t]*\\(.*\\)[ \\t]*$`, 'm');
+export const functionEndRegex = new RegExp(`^[ \\t]*End[ \\t]*(Sub|Function)[ \\t]*$`, 'm');
+export const functionUsageRegex = (funName) => new RegExp(`^(?:[^"]*?"[^"]*?")*?[^"]*?\\b${funName}\\b.*$`, 'm');
 const forRegex = new RegExp(`^[ \\t]*For[ \\t]+(?<iteratorVariable>${varName})[ \\t]*=[ \\t]*$`);
 
 const variableDeclarationRegex = new RegExp(`(^[ \\t]*(Set|Dim)[ \\t]+(?<variableName>${varName}).*?$)|(^[ \\t]*(?<variableName2>${varName})([ \\t]*\\(.+?\\))?[ \\t]*=.*?$)`);
-const functionDeclarationRegex = new RegExp(`^[ \\t]*((Public|Private)[ \\t]+)?(Function|Sub)[ \\t]+(?<functionName>${varName}).*?$`);
 const commentRegex = new RegExp(`^(?<before_comment>(?:[^"]*?"[^"]*?")*?[^"]*?)(?<comment>'.*)$`);
 const lineBreakRegex = new RegExp(` _(\r\n|\r|\n)`, "g");
 
@@ -204,8 +205,8 @@ function logicalAnalysis(code) {
     const stack = [];
     const variables = {};
     for (const line of codeLines) {
-        if (functionRegex.test(line)) {
-            const groups = line.match(functionRegex).groups;
+        if (functionDeclarationRegex.test(line)) {
+            const groups = line.match(functionDeclarationRegex).groups;
             stack.push(groups.functionName);
         }
     }
