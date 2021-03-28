@@ -1,9 +1,16 @@
 import {detectVBAStomping} from "./vba_stomping_detection";
-import {functionDeclarationRegex, functionEndRegex, functionUsageRegex, removeComments} from "./deobfuscation";
+import {
+    functionDeclarationRegex,
+    functionEndRegex,
+    functionUsageRegex,
+    removeColonDelimiters,
+    removeComments
+} from "./deobfuscation";
 
 const autoExecFunctions = [
     "Workbook_Open",
-    "Document_Open"
+    "Document_Open",
+    "Document_Close"
 ];
 
 const suspiciousWords = [
@@ -24,7 +31,6 @@ const suspiciousWords = [
 export function analyzeFile(oleFile) {
     let safe = true;
     let output = "";
-    const foundWords = [];
 
     if (detectVBAStomping(oleFile)) {
         safe = false;
@@ -38,6 +44,7 @@ export function analyzeFile(oleFile) {
             const dependency = oleFile.VBAFunctions.find(f => f.id === id);
             fullBody += dependency.body.join("\n") + "\n";
         }
+        fullBody = prepareForAnalysis(fullBody);
 
         const foundWords = [];
         for (const word of suspiciousWords) {
@@ -99,5 +106,6 @@ export function parseVBAFunctions(oleFile) {
 export function prepareForAnalysis(code) {
     //TODO collapse long lines
     code = removeComments(code);
+    code = removeColonDelimiters(code);
     return code;
 }

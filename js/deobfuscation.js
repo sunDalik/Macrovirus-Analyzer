@@ -11,6 +11,7 @@ const variableDeclarationRegex = new RegExp(`(^[ \\t]*(Set|Dim)[ \\t]+(?<variabl
 const fullLineCommentRegex = new RegExp(`^[ \\t]*'.*$`);
 const commentRegex = new RegExp(`^(?<before_comment>(?:[^"]*?"[^"]*?")*?[^"]*?)(?<comment>'.*)$`);
 const lineBreakRegex = new RegExp(` _(\r\n|\r|\n)`, "g");
+const colonDelimiterRegex = new RegExp(`:(?!=)`, "g");
 
 const blocks = [{start: "Sub", end: "End"},
     {start: "Function", end: "End"},
@@ -29,6 +30,7 @@ export function deobfuscateCode(code) {
     //TODO allow preserving original indentation?
     deobfuscatedCode = shrinkSpaces(deobfuscatedCode);
     if (readSetting(SETTINGS.removeComments)) deobfuscatedCode = removeComments(deobfuscatedCode);
+    deobfuscatedCode = removeColonDelimiters(deobfuscatedCode);
     if (readSetting(SETTINGS.removeDeadCode)) deobfuscatedCode = removeDeadCode(deobfuscatedCode);
     if (readSetting(SETTINGS.renameVariables)) deobfuscatedCode = renameVariables(deobfuscatedCode);
     deobfuscatedCode = indentCode(deobfuscatedCode);
@@ -90,6 +92,11 @@ export function removeComments(code) {
         }
     }
     return newCodeLines.join("\n");
+}
+
+export function removeColonDelimiters(code) {
+    code = code.replace(colonDelimiterRegex, "\n");
+    return code;
 }
 
 export function collapseLongLines(code) {
