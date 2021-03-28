@@ -7,7 +7,7 @@ import {
     removeComments
 } from "./deobfuscation";
 
-const autoExecFunctions = [
+export const autoExecFunctions = [
     "Workbook_Open",
     "Document_Open",
     "Document_Close"
@@ -28,6 +28,10 @@ const suspiciousWords = [
     "Create" // https://docs.microsoft.com/en-us/windows/win32/cimwin32prov/create-method-in-class-win32-process
 ];
 
+const suspiciousRegex = [
+    {regex: /Options\..+[ \t]*=/, description: "Modifies word settings"}
+];
+
 export function analyzeFile(oleFile) {
     let safe = true;
     let output = "";
@@ -38,7 +42,7 @@ export function analyzeFile(oleFile) {
     }
 
     for (const func of oleFile.VBAFunctions) {
-        if (!autoExecFunctions.includes(func.name)) continue;
+        if (!isAutoExec(func.name)) continue;
         let fullBody = func.body.join("\n") + "\n";
         for (const id of func.dependencies) {
             const dependency = oleFile.VBAFunctions.find(f => f.id === id);
@@ -53,11 +57,17 @@ export function analyzeFile(oleFile) {
                 safe = false;
             }
         }
+        for (const susReg of suspiciousRegex) {
+            if (susReg.regex.test(fullBody)) {
+                foundWords.push(susReg.description);
+                safe = false;
+            }
+        }
 
         if (foundWords.length !== 0) {
-            output += `Autoexec function <b>${func.name}</b> contains suspicious commands:\n`;
+            output += `Autoexec function <b>${func.name}</b> contains suspicious commands:\n\n`;
             for (const word of foundWords) {
-                output += "\n<li>" + word + "</li>";
+                output += "<li>" + word + "</li>\n";
             }
         }
     }
@@ -108,4 +118,8 @@ export function prepareForAnalysis(code) {
     code = removeComments(code);
     code = removeColonDelimiters(code);
     return code;
+}
+
+export function isAutoExec(func) {
+    return autoExecFunctions.map(f => f.toLowerCase()).includes(func.toLowerCase());
 }

@@ -1,4 +1,5 @@
 import {readSetting, SETTINGS} from "./local_storage";
+import {isAutoExec} from "./analysis";
 
 const varName = "[A-Za-z][A-Za-z0-9_\-]*";
 
@@ -82,7 +83,6 @@ function indentCode(code) {
 }
 
 // lower case
-const autoExecFunctions = ["document_open"];
 
 export function removeComments(code) {
     let newCodeLines = [];
@@ -115,14 +115,13 @@ function renameVariables(code) {
     for (const line of codeLines) {
         const matchResult = line.match(functionDeclarationRegex);
         if (matchResult) {
-            const functionName = matchResult.groups.functionName;
-            functions.push(functionName.toLowerCase());
+            functions.push(matchResult.groups.functionName);
         }
     }
 
     let iterator = 0;
     for (const func of functions) {
-        if (autoExecFunctions.includes(func)) continue;
+        if (isAutoExec(func)) continue;
         const new_func_name = "fun_" + iterator;
         for (let i = 0; i < codeLines.length; i++) {
             codeLines[i] = codeLines[i].replaceAll(new RegExp(`\\b${func}\\b`, "gi"), new_func_name);
