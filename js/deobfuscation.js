@@ -8,6 +8,7 @@ export const functionUsageRegex = (funName) => new RegExp(`^(?:[^"]*?"[^"]*?")*?
 const forRegex = new RegExp(`^[ \\t]*For[ \\t]+(?<iteratorVariable>${varName})[ \\t]*=[ \\t]*$`);
 
 const variableDeclarationRegex = new RegExp(`(^[ \\t]*(Set|Dim)[ \\t]+(?<variableName>${varName}).*?$)|(^[ \\t]*(?<variableName2>${varName})([ \\t]*\\(.+?\\))?[ \\t]*=.*?$)`);
+const fullLineCommentRegex = new RegExp(`^[ \\t]*'.*$`);
 const commentRegex = new RegExp(`^(?<before_comment>(?:[^"]*?"[^"]*?")*?[^"]*?)(?<comment>'.*)$`);
 const lineBreakRegex = new RegExp(` _(\r\n|\r|\n)`, "g");
 
@@ -82,11 +83,13 @@ function indentCode(code) {
 const autoExecFunctions = ["document_open"];
 
 export function removeComments(code) {
-    let codeLines = code.split("\n");
-    for (let i = 0; i < codeLines.length; i++) {
-        codeLines[i] = codeLines[i].replace(commentRegex, "$<before_comment>");
+    let newCodeLines = [];
+    for (const line of code.split("\n")) {
+        if (!fullLineCommentRegex.test(line)) {
+            newCodeLines.push(line.replace(commentRegex, "$<before_comment>"));
+        }
     }
-    return codeLines.join("\n");
+    return newCodeLines.join("\n");
 }
 
 export function collapseLongLines(code) {

@@ -261,7 +261,12 @@ export class OLEFile {
                 if (!moduleRecord) continue;
                 macroModule.name = moduleRecord.name;
                 macroModule.sourceCode = byteArrayToStr(this.decompressVBASourceCode(dataArray.slice(moduleRecord.sourceOffset)));
-                macroModule.pcode = disassemblePCode(dataArray, vbaProjectStream);
+                try {
+                    macroModule.pcode = disassemblePCode(dataArray, vbaProjectStream);
+                } catch (e) {
+                    console.log("PCODE DISASSEMBLING ERROR");
+                    macroModule.pcode = [];
+                }
                 this.macroModules.push(macroModule);
             }
         }
