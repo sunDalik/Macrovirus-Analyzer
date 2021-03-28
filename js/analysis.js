@@ -1,11 +1,12 @@
 import {detectVBAStomping} from "./vba_stomping_detection";
 import {functionDeclarationRegex, functionEndRegex, functionUsageRegex, removeComments} from "./deobfuscation";
 
-const suspiciousWords = [
-    // Auto execution triggers
-    "Sub Workbook_Open()",
-    "Sub Document_Open()",
+const autoExecFunctions = [
+    "Workbook_Open",
+    "Document_Open"
+];
 
+const suspiciousWords = [
     // File system operations
     "Kill",
     "CreateTextFile",
@@ -25,8 +26,7 @@ export function analyzeCode(sourceCode, pcode) {
     let output = "";
     const foundWords = [];
     for (const word of suspiciousWords) {
-        //if (code.includes(word)) foundWords.push(word);
-        if (new RegExp(`\\b${word}\\b`, "i").test(sourceCode)) {
+        if (functionUsageRegex(word).test(sourceCode)) {
             foundWords.push(word);
             safe = false;
         }
