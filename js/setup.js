@@ -4,6 +4,7 @@ import {deobfuscateCode} from "./deobfuscation";
 import {DEOBFUSCATION_SETTINGS, readSetting, SETTINGS, setupLocalStorage, writeSetting} from "./local_storage";
 import {OLEFile} from "./OLEFile";
 import {pcodeToSource} from "./pcode2";
+import {readByteArray} from "./file_processor";
 
 global = window;
 setupLocalStorage();
@@ -27,6 +28,8 @@ const mainTable = document.getElementsByClassName('main-table')[0];
 fileSelector.addEventListener("input", e => {
     const fileList = e.target.files;
 
+    //TODO Analyze all ole files inside the archive if file extension is .zip (or .rar or whatever?)
+    //TODO Automatically try "infected" password if archive has password
     for (const file of fileList) {
         if (file === null) continue;
         fileNameSpan.innerText = file.name;
@@ -46,38 +49,49 @@ fileSelector.addEventListener("input", e => {
          */
 
         showTab("tab2");
-
-        if (file.name.endsWith(".docm") || file.name.endsWith(".xlsm")) {
-            const jsZip = new JSZip();
-            jsZip.loadAsync(file)
-                .then(zip => {
-                    for (const zipFileName in zip.files) {
-                        //todo vbaProject.bin can potentially be renamed so you need to check for this
-                        if (zipFileName.endsWith("vbaProject.bin")) {
-                            const currentFile = zip.files[zipFileName];
-                            //const liFileName = document.createElement("li");
-                            //liFileName.innerText = zipFileName;
-                            //fileContentsDiv.appendChild(liFileName);
-                            return currentFile.async("array");
+        const reader = new FileReader();
+        reader.addEventListener('load', e => {
+            const contents = new Uint8Array(e.target.result);
+            if (isOleFile(contents)) {
+                displayResults(contents);
+            } else if (isZipFile(contents)) {
+                const jsZip = new JSZip();
+                jsZip.loadAsync(file)
+                    .then(zip => {
+                        for (const zipFileName in zip.files) {
+                            //todo vbaProject.bin can potentially be renamed so you need to check for this
+                            if (zipFileName.endsWith("vbaProject.bin")) {
+                                const currentFile = zip.files[zipFileName];
+                                //const liFileName = document.createElement("li");
+                                //liFileName.innerText = zipFileName;
+                                //fileContentsDiv.appendChild(liFileName);
+                                return currentFile.async("array");
+                            }
                         }
-                    }
-                }, () => {
-                    console.log("Not a valid zip file");
-                })
-                .then(content => {
-                    displayResults(new Uint8Array(content));
-                });
-        } else if (file.name.endsWith(".doc") || file.name.endsWith(".xls")) {
-            const reader = new FileReader();
-            reader.addEventListener('load', e => {
-                displayResults(new Uint8Array(e.target.result));
-            });
-            reader.readAsArrayBuffer(file);
-        }
+                    }, () => {
+                        console.log("Not a valid zip file");
+                    })
+                    .then(content => {
+                        displayResults(new Uint8Array(content));
+                    });
+            }
+        });
+        reader.readAsArrayBuffer(file);
         // only read first file for now
         break;
     }
 });
+
+function isOleFile(binContent) {
+    const magic = readByteArray(binContent, {value: 0}, 8);
+    return magic[0] === 0xD0 && magic[1] === 0xCF && magic[2] === 0x11 && magic[3] === 0xE0
+        && magic[4] === 0xA1 && magic[5] === 0xB1 && magic[6] === 0x1A && magic[7] === 0xE1;
+}
+
+function isZipFile(binContent) {
+    const magic = readByteArray(binContent, {value: 0}, 4);
+    return magic[0] === 0x50 && magic[1] === 0x4B && magic[2] === 0x03 && magic[3] === 0x04;
+}
 
 function displayResults(binaryArray) {
     const oleFile = new OLEFile(binaryArray);

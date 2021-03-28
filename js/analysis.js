@@ -10,7 +10,9 @@ import {
 export const autoExecFunctions = [
     "Workbook_Open",
     "Document_Open",
-    "Document_Close"
+    "Document_Close",
+    "Auto_Open",
+    "AutoOpen"
 ];
 
 const suspiciousWords = [
@@ -72,7 +74,7 @@ export function analyzeFile(oleFile) {
         }
     }
 
-    if (safe) return "Module is safe!\n";
+    if (safe) return "File is safe!\n";
     return output;
 }
 
