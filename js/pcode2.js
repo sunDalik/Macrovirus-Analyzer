@@ -1,5 +1,4 @@
 export function pcodeToSource(pcodeLines) {
-    console.log(pcodeLines);
     let sourceCode = "";
     let currentLine = "";
     let stack = [];
@@ -150,7 +149,6 @@ export function pcodeToSource(pcodeLines) {
         currentLine = "";
         stack = [];
     }
-    console.log(pcodeLines);
     return sourceCode;
 }
 

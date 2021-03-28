@@ -4,6 +4,11 @@ export const SETTINGS = Object.freeze({
     renameVariables: {key: "renameVariables", name: "Rename variables", defaultValue: true},
     removeDeadCode: {key: "removeDeadCode", name: "Remove dead code", defaultValue: true},
     removeComments: {key: "removeComments", name: "Remove comments", defaultValue: false},
+    deobfuscateDecompiledPCode: {
+        key: "deobfuscateDecompiledPCode",
+        name: "Deobfuscate decompiled p-code",
+        defaultValue: false
+    },
 
     showSourceCode: {key: "showSourceCode", name: "--", defaultValue: true},
     showPCode: {key: "showPCode", name: "--", defaultValue: false},
@@ -12,7 +17,8 @@ export const SETTINGS = Object.freeze({
 
 export const DEOBFUSCATION_SETTINGS = [SETTINGS.renameVariables,
     SETTINGS.removeDeadCode,
-    SETTINGS.removeComments];
+    SETTINGS.removeComments,
+    SETTINGS.deobfuscateDecompiledPCode];
 
 export function setupLocalStorage(reset = false) {
     if (!window.localStorage[STORAGE_SETTINGS] || reset) {

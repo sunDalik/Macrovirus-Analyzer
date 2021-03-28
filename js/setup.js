@@ -156,7 +156,8 @@ function deobfuscateModulesAndShow(macroModules) {
         let macroSourceCode = module.sourceCode;
 
         const div = document.createElement("div");
-        div.innerHTML = deobfuscateCode(removeAttributes(macroSourceCode));
+        if (readSetting(SETTINGS.deobfuscateDecompiledPCode)) div.innerHTML = deobfuscateCode(pcodeToSource(module.pcode));
+        else div.innerHTML = deobfuscateCode(removeAttributes(macroSourceCode));
         //div.innerHTML = removeAttributes(module.sourceCode); //PCODE2 DEBUG
         div.classList.add("table-module");
         div.classList.add("code");
