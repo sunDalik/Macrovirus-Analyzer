@@ -5,8 +5,9 @@ export const SETTINGS = Object.freeze({
     removeDeadCode: {key: "removeDeadCode", name: "Remove dead code", defaultValue: true},
     removeComments: {key: "removeComments", name: "Remove comments", defaultValue: false},
 
-    compareCode: {key: "compareCode", name: "--", defaultValue: false},
-    compareWithDecompiledCode: {key: "compareWithDecompiledCode", name: "--", defaultValue: false}
+    showSourceCode: {key: "showSourceCode", name: "--", defaultValue: true},
+    showPCode: {key: "showPCode", name: "--", defaultValue: false},
+    useDecompiledPCode: {key: "useDecompiledPCode", name: "--", defaultValue: false}
 });
 
 export const DEOBFUSCATION_SETTINGS = [SETTINGS.renameVariables,

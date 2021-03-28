@@ -228,3 +228,7 @@ input:disabled + label {
     color: #db3c3c;
     font-weight: bold;
 }
+
+.hidden{
+    display: none;
+}
