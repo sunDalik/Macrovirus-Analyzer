@@ -2,7 +2,7 @@ import {detectVBAStomping} from "./vba_stomping_detection";
 import {
     functionDeclarationRegex,
     functionEndRegex,
-    functionUsageRegex,
+    keywordRegex,
     removeColonDelimiters,
     removeComments
 } from "./deobfuscation";
@@ -52,7 +52,7 @@ export function analyzeFile(oleFile) {
 
         const foundWords = [];
         for (const word of suspiciousWords) {
-            if (functionUsageRegex(word).test(fullBody)) {
+            if (keywordRegex(word).test(fullBody)) {
                 foundWords.push(word);
                 safe = false;
             }
@@ -103,7 +103,7 @@ export function parseVBAFunctions(oleFile) {
         const body = func.body.join("\n");
         for (const func2 of VBAFunctions) {
             if (func === func2) continue;
-            if (functionUsageRegex(func2.name).test(body)) {
+            if (keywordRegex(func2.name).test(body)) {
                 func.dependencies.push(func2.id);
             }
         }

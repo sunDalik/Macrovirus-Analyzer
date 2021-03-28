@@ -5,7 +5,11 @@ const varName = "[A-Za-z][A-Za-z0-9_\-]*";
 
 export const functionDeclarationRegex = new RegExp(`^[ \\t]*((Public|Private)[ \\t]+)?(Sub|Function)[ \\t]+(?<functionName>${varName})[ \\t]*\\(.*\\)[ \\t]*$`, 'm');
 export const functionEndRegex = new RegExp(`^[ \\t]*End[ \\t]*(Sub|Function)[ \\t]*$`, 'm');
-export const functionUsageRegex = (funName) => new RegExp(`^(?:[^"]*?"[^"]*?")*?[^"]*?\\b${funName}\\b.*$`, 'm');
+export const keywordRegex = (keyword, i = false) => {
+    let flags = "g";
+    if (i) flags += "i";
+    return new RegExp(`^(?<before>(?:[^"]*?"[^"]*?")*?[^"]*?)\\b${keyword}\\b`, flags);
+};
 const forRegex = new RegExp(`^[ \\t]*For[ \\t]+(?<iteratorVariable>${varName})[ \\t]*=[ \\t]*$`);
 
 const variableDeclarationRegex = new RegExp(`(^[ \\t]*(Set|Dim)[ \\t]+(?<variableName>${varName}).*?$)|(^[ \\t]*(?<variableName2>${varName})([ \\t]*\\(.+?\\))?[ \\t]*=.*?$)`);
@@ -49,6 +53,10 @@ function shrinkSpaces(code) {
     //code = code.replace(/\t/g, ' ');
     //code = code.replace(/  +/g, ' ');
     return code;
+}
+
+function replaceKeyword(text, keyword, new_keyword, i = false) {
+    return text.replace(keywordRegex(keyword, i), "$<before>" + new_keyword);
 }
 
 function indentCode(code) {
@@ -107,7 +115,6 @@ function renameVariables(code) {
     //todo block-aware renaming?
     //todo type-aware names?
     //todo function arguments renaming
-    //todo dont rename occurences in strings
     const functions = [];
     const newFuncs = [];
 
@@ -124,7 +131,7 @@ function renameVariables(code) {
         if (isAutoExec(func)) continue;
         const new_func_name = "fun_" + iterator;
         for (let i = 0; i < codeLines.length; i++) {
-            codeLines[i] = codeLines[i].replaceAll(new RegExp(`\\b${func}\\b`, "gi"), new_func_name);
+            codeLines[i] = replaceKeyword(codeLines[i], func, new_func_name, true);
         }
         newFuncs.push(new_func_name);
         iterator++;
@@ -136,9 +143,9 @@ function renameVariables(code) {
         const matchResult = line.match(variableDeclarationRegex);
         if (matchResult) {
             if (matchResult.groups.variableName) {
-                variables.push(matchResult.groups.variableName.toLowerCase());
+                variables.push(matchResult.groups.variableName);
             } else if (matchResult.groups.variableName2) {
-                variables.push(matchResult.groups.variableName2.toLowerCase());
+                variables.push(matchResult.groups.variableName2);
             }
         }
     }
@@ -148,7 +155,7 @@ function renameVariables(code) {
         if (newFuncs.includes(variable)) continue;
         const new_var_name = "var_" + iterator;
         for (let i = 0; i < codeLines.length; i++) {
-            codeLines[i] = codeLines[i].replaceAll(new RegExp(`\\b${variable}\\b`, "gi"), new_var_name);
+            codeLines[i] = replaceKeyword(codeLines[i], variable, new_var_name, true);
         }
         iterator++;
     }
