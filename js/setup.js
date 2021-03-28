@@ -134,6 +134,13 @@ function displayResults(binaryArray) {
         }
     }
 
+    if (document.getElementById("show-pcode-checkbox").checked) {
+        fillPCode();
+    }
+    if (!document.getElementById("show-source-code-checkbox").checked) {
+        sourceCodeTab.querySelectorAll(".tab-text .direct-child")[0].classList.add("hidden");
+    }
+
     const div = document.createElement("div");
     div.innerHTML = analyzeFile(oleFile);
     div.classList.add("table-module");
