@@ -238,6 +238,7 @@ function removeAttributes(code) {
 // Init deobfuscation menu
 for (const setting of DEOBFUSCATION_SETTINGS) {
     const div = document.createElement("div");
+    //div.setAttribute("data-tooltip","tooltip");
     const checkbox = document.createElement("input");
     checkbox.setAttribute("type", "checkbox");
     checkbox.checked = readSetting(setting);

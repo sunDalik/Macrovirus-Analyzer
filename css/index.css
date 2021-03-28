@@ -229,6 +229,29 @@ input:disabled + label {
     font-weight: bold;
 }
 
-.hidden{
+.hidden {
     display: none;
+}
+
+[data-tooltip]:before {
+    content: attr(data-tooltip);
+    position: absolute;
+    opacity: 0;
+
+    transition-delay: 0s;
+    margin-top: 25px;
+    padding: 10px;
+    background: var(--black-color);
+    color: white;
+}
+
+[data-tooltip]:hover:before {
+    transition: all 0.2s ease 0.5s;
+    opacity: 1;
+
+    pointer-events: none;
+}
+
+[data-tooltip]:before {
+    pointer-events: none;
 }
