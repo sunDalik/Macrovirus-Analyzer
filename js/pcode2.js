@@ -10,7 +10,7 @@ export function pcodeToSource(pcodeLines) {
             if (line.startsWith("FuncDefn")) {
                 currentLine = line.match(new RegExp("^FuncDefn \\((?<fun>.+)\\)$")).groups.fun;
             } else if (line.startsWith("QuoteRem")) {
-                currentLine = "'" + line.match(new RegExp("^QuoteRem 0x.+ 0x.+ \"(?<comment>.+)\"$")).groups.comment;
+                currentLine = "'" + line.match(new RegExp("^QuoteRem 0x.+ 0x.+ \"(?<comment>.*)\"$")).groups.comment;
             } else if (line.startsWith("Dim")) {
                 const matchResult = line.match(new RegExp("^Dim \\((?<mod>.+)\\)$"));
                 if (matchResult) {
@@ -21,7 +21,7 @@ export function pcodeToSource(pcodeLines) {
             } else if (line.startsWith("LitDI2")) {
                 stack.push(parseInt(line.match(new RegExp("^LitDI2 (?<value>.+)$")).groups.value));
             } else if (line.startsWith("LitStr")) {
-                stack.push(line.match(new RegExp("^LitStr 0x.+ (?<value>\".+\")$")).groups.value);
+                stack.push(line.match(new RegExp("^LitStr 0x.+ (?<value>\".*\")$")).groups.value);
             } else if (line.startsWith("LitVarSpecial")) {
                 stack.push(line.match(new RegExp("^LitVarSpecial \\((?<value>.+)\\)$")).groups.value);
             } else if (line.startsWith("VarDefn")) {
