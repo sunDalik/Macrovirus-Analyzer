@@ -1,5 +1,5 @@
 import JSZip from "jszip";
-import {analyzeCode} from "./analysis";
+import {analyzeFile} from "./analysis";
 import {deobfuscateCode} from "./deobfuscation";
 import {DEOBFUSCATION_SETTINGS, readSetting, SETTINGS, setupLocalStorage, writeSetting} from "./local_storage";
 import {OLEFile} from "./OLEFile";
@@ -129,17 +129,15 @@ function displayResults(binaryArray) {
         }
         sourceCodeTab.querySelectorAll(".tab-text .direct-child")[0].appendChild(div);
 
-        const div2 = document.createElement("div");
-        div2.innerHTML = analyzeCode(macroSourceCode, module.pcode);
-        //div2.innerHTML = module.pcode.join("\n"); //PCODE2 DEBUG
-        div2.classList.add("table-module");
-        tabTextElement(analysisTab).appendChild(div2);
-
         if (i < oleFile.macroModules.length - 1) {
             div.classList.add("module-separator");
-            div2.classList.add("module-separator");
         }
     }
+
+    const div = document.createElement("div");
+    div.innerHTML = analyzeFile(oleFile);
+    div.classList.add("table-module");
+    tabTextElement(analysisTab).appendChild(div);
 
     deobfuscateModulesAndShow(oleFile.macroModules);
 }

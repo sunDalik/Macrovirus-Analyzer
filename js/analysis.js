@@ -21,31 +21,41 @@ const suspiciousWords = [
     "Create" // https://docs.microsoft.com/en-us/windows/win32/cimwin32prov/create-method-in-class-win32-process
 ];
 
-export function analyzeCode(sourceCode, pcode) {
+export function analyzeFile(oleFile) {
     let safe = true;
     let output = "";
     const foundWords = [];
-    for (const word of suspiciousWords) {
-        if (functionUsageRegex(word).test(sourceCode)) {
-            foundWords.push(word);
-            safe = false;
-        }
-    }
 
-    if (detectVBAStomping(pcode, sourceCode)) {
+    if (detectVBAStomping(oleFile)) {
         safe = false;
         output += "Detected VBA stomping!\n";
     }
 
-    if (safe) return "Module is safe!\n";
-    else {
+    for (const func of oleFile.VBAFunctions) {
+        if (!autoExecFunctions.includes(func.name)) continue;
+        let fullBody = func.body.join("\n") + "\n";
+        for (const id of func.dependencies) {
+            const dependency = oleFile.VBAFunctions.find(f => f.id === id);
+            fullBody += dependency.body.join("\n") + "\n";
+        }
+
+        const foundWords = [];
+        for (const word of suspiciousWords) {
+            if (functionUsageRegex(word).test(fullBody)) {
+                foundWords.push(word);
+                safe = false;
+            }
+        }
+
         if (foundWords.length !== 0) {
-            output += "Module contains suspicious commands:\n";
+            output += `Autoexec function <b>${func.name}</b> contains suspicious commands:\n`;
             for (const word of foundWords) {
                 output += "\n<li>" + word + "</li>";
             }
         }
     }
+
+    if (safe) return "Module is safe!\n";
     return output;
 }
 
