@@ -47,11 +47,7 @@ export class OLEFile {
         const firstDIFATSector = readInt(binContent, offset, 4);
         const numberOfDIFATSectors = readInt(binContent, offset, 4);
 
-        //todo read other DIFAT entries
-        this.DIFAT = readByteArray(binContent, offset, 436);
-        //todo
-        //readDIFAT(byteArray)
-
+        this.DIFAT = this.readDIFAT(numberOfDIFATSectors, firstDIFATSector);
         this.FAT = this.readFAT(numberOfFATSectors);
         this.miniFAT = this.readSectorChainFAT(firstMiniFATSector);
         this.fileTree = this.readFileTree(firstDirectorySector);
@@ -303,11 +299,12 @@ export class OLEFile {
     }
 
     readSectorChainFAT(startSectorNumber, streamSize = -1) {
+        if (startSectorNumber === 0xFFFFFFFE || startSectorNumber === 0xFFFFFFFF) return new Uint8Array(0);
         const sectorIndexesArray = [startSectorNumber];
         let attempt = 0;
         while (attempt++ < 999999) {
             const nextSector = readInt(this.FAT, {value: sectorIndexesArray[sectorIndexesArray.length - 1] * 4}, 4);
-            if (nextSector === 0xFFFFFFFE) break;
+            if (nextSector === 0xFFFFFFFE || nextSector === 0xFFFFFFFF) break;
             sectorIndexesArray.push(nextSector);
         }
 
@@ -355,6 +352,27 @@ export class OLEFile {
             }
         }
         return resultArray;
+    }
+
+    readDIFAT(numberOfDIFATSectors, firstDIFATSector) {
+        const headerDIFATSize = 109 * 4;
+        const DIFAT = new Uint8Array(headerDIFATSize + numberOfDIFATSectors * (this.sectorSize - 4));
+
+        const headerDIFAT = readByteArray(this.binContent, {value: 76}, headerDIFATSize);
+        for (let b = 0; b < headerDIFAT.length; b++) {
+            DIFAT[b] = headerDIFAT[b];
+        }
+
+        let DIFATSector = firstDIFATSector;
+        for (let i = 0; i < numberOfDIFATSectors; i++) {
+            const sector = this.readSectorFAT(DIFATSector);
+            for (let b = 0; b < sector.length - 4; b++) {
+                DIFAT[headerDIFATSize + i * (this.sectorSize - 4) + b] = sector[b];
+            }
+            DIFATSector = readInt(sector, {value: this.sectorSize - 4}, 4);
+        }
+
+        return DIFAT;
     }
 
     readFAT(numberOfFATSectors) {
@@ -414,10 +432,13 @@ export class OLEFile {
             const modifiedTime = readInt(directoriesData, offset, 8);
             dirEntry.startingSector = readInt(directoriesData, offset, 4);
             dirEntry.streamSize = readInt(directoriesData, offset, 8);
-            directoryEntries.push(dirEntry);
+            if (dirEntry.type !== DirEntryType.UNKNOWN) {
+                directoryEntries.push(dirEntry);
+            }
         }
 
         const findSiblings = (dir, entries) => {
+            if (dir === undefined) return [];
             let siblings = [dir];
             if (dir.leftSiblingId !== null && dir.leftSiblingId !== 0xFFFFFFFF) {
                 siblings = siblings.concat(findSiblings(entries.find(d => d.id === dir.leftSiblingId), entries));
