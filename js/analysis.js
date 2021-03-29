@@ -1,5 +1,6 @@
 import {detectVBAStomping} from "./vba_stomping_detection";
 import {
+    dllDeclarationRegex,
     functionDeclarationRegex,
     functionEndRegex,
     keywordRegex,
@@ -46,13 +47,18 @@ export function analyzeFile(oleFile) {
     for (const func of oleFile.VBAFunctions) {
         if (!isAutoExec(func.name)) continue;
         let fullBody = func.body.join("\n") + "\n";
-        for (const id of func.dependencies) {
-            const dependency = oleFile.VBAFunctions.find(f => f.id === id);
+        const foundWords = [];
+        const funcDependencies = getAllDependencies(func, oleFile.VBAFunctions);
+        for (const dependency of funcDependencies) {
             fullBody += dependency.body.join("\n") + "\n";
         }
         fullBody = prepareForAnalysis(fullBody);
 
-        const foundWords = [];
+        if (funcDependencies.some(f => f.type === FuncType.DLL)) {
+            foundWords.push("Executes DLLs");
+            safe = false;
+        }
+
         for (const word of suspiciousWords) {
             if (keywordRegex(word).test(fullBody)) {
                 foundWords.push(word);
@@ -92,10 +98,28 @@ export function parseVBAFunctions(oleFile) {
                     currentFunction.body.push(line);
                 }
             } else {
-                const matchResult = line.match(functionDeclarationRegex);
+                let matchResult = line.match(functionDeclarationRegex);
                 if (matchResult && matchResult.groups) {
-                    currentFunction = {id: id++, name: matchResult.groups.functionName, dependencies: [], body: []};
+                    currentFunction = {
+                        id: id++,
+                        name: matchResult.groups.functionName,
+                        dependencies: [],
+                        body: [],
+                        type: FuncType.Normal
+                    };
                     VBAFunctions.push(currentFunction);
+                    continue;
+                }
+
+                matchResult = line.match(dllDeclarationRegex);
+                if (matchResult && matchResult.groups) {
+                    VBAFunctions.push({
+                        id: id++,
+                        name: matchResult.groups.functionName,
+                        dependencies: [],
+                        body: [],
+                        type: FuncType.DLL
+                    });
                 }
             }
         }
@@ -125,3 +149,20 @@ export function prepareForAnalysis(code) {
 export function isAutoExec(func) {
     return autoExecFunctions.map(f => f.toLowerCase()).includes(func.toLowerCase());
 }
+
+function getAllDependencies(func, VBAFunctions) {
+    const findDependencies = (currFunc, fullDependencies) => {
+        for (const id of currFunc.dependencies) {
+            const dep = VBAFunctions.find(f => f.id === id);
+            if (!fullDependencies.includes(dep)) {
+                fullDependencies.push(dep);
+                findDependencies(dep, fullDependencies);
+            }
+        }
+        return fullDependencies;
+    };
+
+    return findDependencies(func, []);
+}
+
+export const FuncType = Object.freeze({Normal: 0, DLL: 1});
