@@ -123,57 +123,18 @@ export class OLEFile {
             //read project references record
             let attempt = 0;
             while (attempt++ < 999999) {
-                const readNameReference = () => {
-                    const id = readInt(dirStream, dirOffset, 2);
-                    if (id === 0x000F) return false; // value 0x000F indicates end of references array and start of module records
-                    const nameSize = readInt(dirStream, dirOffset, 4);
-                    dirOffset.value += nameSize;
-                    dirOffset.value += 2;
-                    const nameSizeUnicode = readInt(dirStream, dirOffset, 4);
-                    dirOffset.value += nameSizeUnicode;
-                    return true;
-                };
-
-                const nameReadResult = readNameReference();
+                const nameReadResult = this.readNameReference(dirOffset, dirStream);
                 if (nameReadResult === false) break;
 
                 const referenceRecordId = readInt(dirStream, dirOffset, 2);
                 if (referenceRecordId === 0x002F) {
-                    // reference control
-                    // OPTIONAL ORIGINAL RECORD FIELD ???????????????????????????????
-                    const sizeTwiddled = readInt(dirStream, dirOffset, 4);
-                    const sizeLibidTwiddled = readInt(dirStream, dirOffset, 4);
-                    dirOffset.value += sizeLibidTwiddled;
-                    dirOffset.value += 6;
-                    const reserved = readInt(dirStream, dirOffset, 2);
-                    // Optional Name Record
-                    if (reserved === 0x0016) {
-                        dirOffset.value -= 2;
-                        readNameReference();
-                        dirOffset.value += 2;
-                    }
-                    const sizeExtended = readInt(dirStream, dirOffset, 4);
-                    const sizeLibidExtended = readInt(dirStream, dirOffset, 4);
-                    dirOffset.value += sizeLibidExtended;
-                    dirOffset.value += 26;
+                    this.readControlReference(dirOffset, dirStream);
                 } else if (referenceRecordId === 0x0033) {
-                    // reference original
-                    const sizeLibidOriginal = readInt(dirStream, dirOffset, 4);
-                    dirOffset.value += sizeLibidOriginal;
+                    this.readOriginalReference(dirOffset, dirStream);
                 } else if (referenceRecordId === 0x000D) {
-                    // reference registered
-                    const size = readInt(dirStream, dirOffset, 4);
-                    const sizeLibid = readInt(dirStream, dirOffset, 4);
-                    dirOffset.value += sizeLibid;
-                    dirOffset.value += 6;
+                    this.readRegisteredReference(dirOffset, dirStream);
                 } else if (referenceRecordId === 0x000E) {
-                    // reference project
-                    const size = readInt(dirStream, dirOffset, 4);
-                    const sizeLibidAbsolute = readInt(dirStream, dirOffset, 4);
-                    dirOffset.value += sizeLibidAbsolute;
-                    const sizeLibidRelative = readInt(dirStream, dirOffset, 4);
-                    dirOffset.value += sizeLibidRelative;
-                    dirOffset.value += 6;
+                    this.readProjectReference(dirOffset, dirStream);
                 }
             }
 
@@ -270,6 +231,62 @@ export class OLEFile {
                 this.macroModules.push(macroModule);
             }
         }
+    }
+
+    readNameReference(dirOffset, dirStream) {
+        const id = readInt(dirStream, dirOffset, 2);
+        if (id === 0x000F) return false; // value 0x000F indicates end of references array and start of module records
+        const nameSize = readInt(dirStream, dirOffset, 4);
+        dirOffset.value += nameSize;
+        dirOffset.value += 2;
+        const nameSizeUnicode = readInt(dirStream, dirOffset, 4);
+        dirOffset.value += nameSizeUnicode;
+        return true;
+    }
+
+    readControlReference(dirOffset, dirStream) {
+        const sizeTwiddled = readInt(dirStream, dirOffset, 4);
+        const sizeLibidTwiddled = readInt(dirStream, dirOffset, 4);
+        dirOffset.value += sizeLibidTwiddled;
+        dirOffset.value += 6;
+        const reserved = readInt(dirStream, dirOffset, 2);
+        // Optional Name Record
+        if (reserved === 0x0016) {
+            dirOffset.value -= 2;
+            this.readNameReference(dirOffset, dirStream);
+            dirOffset.value += 2;
+        }
+        const sizeExtended = readInt(dirStream, dirOffset, 4);
+        const sizeLibidExtended = readInt(dirStream, dirOffset, 4);
+        dirOffset.value += sizeLibidExtended;
+        dirOffset.value += 26;
+    }
+
+    readOriginalReference(dirOffset, dirStream) {
+        const sizeLibidOriginal = readInt(dirStream, dirOffset, 4);
+        dirOffset.value += sizeLibidOriginal;
+
+        // OriginalReference might be the beginning of a ControlReference
+        const referenceRecordId = readInt(dirStream, dirOffset, 2);
+        if (referenceRecordId === 0x2F) {
+            this.readControlReference(dirOffset, dirStream);
+        }
+    }
+
+    readRegisteredReference(dirOffset, dirStream) {
+        const size = readInt(dirStream, dirOffset, 4);
+        const sizeLibid = readInt(dirStream, dirOffset, 4);
+        dirOffset.value += sizeLibid;
+        dirOffset.value += 6;
+    }
+
+    readProjectReference(dirOffset, dirStream) {
+        const size = readInt(dirStream, dirOffset, 4);
+        const sizeLibidAbsolute = readInt(dirStream, dirOffset, 4);
+        dirOffset.value += sizeLibidAbsolute;
+        const sizeLibidRelative = readInt(dirStream, dirOffset, 4);
+        dirOffset.value += sizeLibidRelative;
+        dirOffset.value += 6;
     }
 
     readStream(sectorNumber, streamSize) {
