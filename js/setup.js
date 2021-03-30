@@ -14,6 +14,7 @@ const openedFiles = [];
 
 const fileSelector = document.getElementById('file-selector');
 const fakeFileSelector = document.getElementById('fake-file-selector');
+const uploadButton = document.getElementById('upload-button');
 const deobfuscationMenu = document.getElementById('deobfuscation-menu');
 const logo = document.getElementById('logo');
 
@@ -33,8 +34,9 @@ fileSelector.addEventListener("input", e => {
     for (const file of fileList) {
         if (file === null) continue;
         fileNameSpan.innerText = file.name;
-        fakeFileSelector.style.marginTop = "50px";
+        fakeFileSelector.style.marginTop = "-20px";
         fakeFileSelector.style.boxShadow = "none";
+        fakeFileSelector.style.opacity = "0";
         logo.style.marginTop = "-70px";
         logo.style.opacity = "0";
         mainTable.classList.remove("hidden");
@@ -49,6 +51,9 @@ fileSelector.addEventListener("input", e => {
          */
 
         showTab("tab2");
+        document.getElementById("file-preview").classList.remove("hidden");
+        document.getElementById("file-name").innerText = file.name;
+        document.getElementById("file-size").innerText = getReadableFileSizeString(file.size);
         const reader = new FileReader();
         reader.addEventListener('load', e => {
             const contents = new Uint8Array(e.target.result);
@@ -118,6 +123,7 @@ function displayResults(binaryArray) {
         div.innerHTML = "<i>No macro scripts detected</i>";
         div.classList.add("table-module");
         tabTextElement(deobfuscatedCodeTab).appendChild(div);
+        setFileResult(false);
         return;
     }
 
@@ -159,6 +165,7 @@ function displayResults(binaryArray) {
     div.innerHTML = analyzeFile(oleFile);
     div.classList.add("table-module");
     tabTextElement(analysisTab).appendChild(div);
+    setFileResult(oleFile.isMalicious);
 
     deobfuscateModulesAndShow(oleFile.macroModules);
 }
@@ -191,6 +198,7 @@ function deobfuscateModulesAndShow(macroModules) {
 }
 
 fakeFileSelector.addEventListener("click", () => fileSelector.click());
+uploadButton.addEventListener("click", () => fileSelector.click());
 
 for (const tabSelector of document.getElementsByClassName("tab-selector")) {
     tabSelector.addEventListener("click", () => showTab(tabSelector.dataset.tab));
@@ -226,6 +234,19 @@ function showTab(id) {
 
 function tabTextElement(tabElement) {
     return tabElement.querySelector(".tab-text");
+}
+
+function setFileResult(isMalicious) {
+    const fileResultElement = document.getElementById("file-result");
+    fileResultElement.classList.remove("good-file-color");
+    fileResultElement.classList.remove("bad-file-color");
+    if (isMalicious) {
+        fileResultElement.classList.add("bad-file-color");
+        fileResultElement.innerText = "Malicious";
+    } else {
+        fileResultElement.classList.add("good-file-color");
+        fileResultElement.innerText = "Safe";
+    }
 }
 
 function copyTabToClipboard(e) {
@@ -367,4 +388,15 @@ if (readSetting(SETTINGS.showPCode)) {
 
 if (readSetting(SETTINGS.useDecompiledPCode)) {
     document.getElementById("pcode-radio-2").checked = true;
+}
+
+function getReadableFileSizeString(fileSizeInBytes) {
+    const byteUnits = [' KB', ' MB', ' GB', ' TB'];
+    let i = -1;
+    while (fileSizeInBytes > 1000) {
+        fileSizeInBytes = fileSizeInBytes / 1000;
+        i++;
+    }
+
+    return Math.max(fileSizeInBytes, 0.1).toFixed(1) + " " + byteUnits[i];
 }

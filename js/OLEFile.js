@@ -19,6 +19,7 @@ export class OLEFile {
         this.fileTree = {};
         this.binContent = binContent;
         this.readFile(this.binContent);
+        this.isMalicious = false;
 
         // Code analysis Data
         this.VBAFunctions = parseVBAFunctions(this); //function {id, name, dependencies(ids), body(array of lines), type (FuncType)}

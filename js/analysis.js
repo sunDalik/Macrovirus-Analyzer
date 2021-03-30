@@ -82,8 +82,13 @@ export function analyzeFile(oleFile) {
         }
     }
 
-    if (safe) return "File is safe!\n";
-    return output;
+    if (safe) {
+        oleFile.isMalicious = false;
+        return "File is safe!\n";
+    } else {
+        oleFile.isMalicious = true;
+        return output;
+    }
 }
 
 export function parseVBAFunctions(oleFile) {
