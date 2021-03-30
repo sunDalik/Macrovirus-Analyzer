@@ -54,6 +54,7 @@ fileSelector.addEventListener("input", e => {
         document.getElementById("file-preview").classList.remove("hidden");
         document.getElementById("file-name").innerText = file.name;
         document.getElementById("file-size").innerText = getReadableFileSizeString(file.size);
+        setFilePreviewImage(file.name.split(".")[1]);
         const reader = new FileReader();
         reader.addEventListener('load', e => {
             const contents = new Uint8Array(e.target.result);
@@ -399,4 +400,12 @@ function getReadableFileSizeString(fileSizeInBytes) {
     }
 
     return Math.max(fileSizeInBytes, 0.1).toFixed(1) + " " + byteUnits[i];
+}
+
+function setFilePreviewImage(fileformat) {
+    const icon = document.getElementById("file-icon");
+    if (fileformat === "doc") icon.src = "images/doc.png";
+    else if (fileformat === "docm") icon.src = "images/docm.png";
+    else if (fileformat === "xls") icon.src = "images/xls.png";
+    else if (fileformat === "xlsm") icon.src = "images/xlsm.png";
 }
