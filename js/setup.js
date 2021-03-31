@@ -18,7 +18,6 @@ const uploadButton = document.getElementById('upload-button');
 const deobfuscationMenu = document.getElementById('deobfuscation-menu');
 const logo = document.getElementById('logo');
 
-//TODO you shouldnt access tabs by ID
 const analysisTab = document.getElementById('tab1');
 const sourceCodeTab = document.getElementById('tab2');
 const deobfuscatedCodeTab = document.getElementById('tab3');
@@ -26,12 +25,28 @@ const deobfuscatedCodeTab = document.getElementById('tab3');
 const fileNameSpan = document.getElementById('filename-display');
 const mainTable = document.getElementsByClassName('main-table')[0];
 
+const fileScroller = document.getElementById('file-scroller');
+
 fileSelector.addEventListener("input", e => {
     const fileList = e.target.files;
+    if (fileList.length === 0) return;
 
-    //TODO Analyze all ole files inside the archive if file extension is .zip (or .rar or whatever?)
-    //TODO Automatically try "infected" password if archive has password
-    for (const file of fileList) {
+    for (const el of fileScroller.querySelectorAll(".file-scroller-file-button")) {
+        el.parentNode.removeChild(el);
+    }
+
+    let displayedAnyFile = false;
+
+    const handleFile = (file, contents) => {
+        file.oleFile = prepareFile(contents);
+        if (!displayedAnyFile) {
+            displayedAnyFile = true;
+            displayFile(file);
+        }
+        setupFileScroller(fileList);
+    };
+
+    for (let file of fileList) {
         if (file === null) continue;
         fileNameSpan.innerText = file.name;
         fakeFileSelector.style.marginTop = "-20px";
@@ -40,26 +55,18 @@ fileSelector.addEventListener("input", e => {
         logo.style.marginTop = "-70px";
         logo.style.opacity = "0";
         mainTable.classList.remove("hidden");
-        /*
-        const reader = new FileReader();
-        let fileContents = "";
-        reader.addEventListener('load', e => {
-            fileContents = e.target.result;
-            fileContentsDiv.innerText = fileContents;
-        });
-        reader.readAsText(file);
-         */
+
+        if (file.name.split(".")[1] === "zip") {
+            //TODO Analyze all ole files inside the archive if file extension is .zip (or .rar or whatever?)
+            //TODO Automatically try "infected" password if archive has password
+        }
 
         showTab("tab2");
-        document.getElementById("file-preview").classList.remove("hidden");
-        document.getElementById("file-name").innerText = file.name;
-        document.getElementById("file-size").innerText = getReadableFileSizeString(file.size);
-        setFilePreviewImage(file.name.split(".")[1]);
         const reader = new FileReader();
         reader.addEventListener('load', e => {
             const contents = new Uint8Array(e.target.result);
             if (isOleFile(contents)) {
-                displayResults(contents);
+                handleFile(file, contents);
             } else if (isZipFile(contents)) {
                 const jsZip = new JSZip();
                 jsZip.loadAsync(file)
@@ -76,17 +83,56 @@ fileSelector.addEventListener("input", e => {
                         }
                     }, () => {
                         console.log("Not a valid zip file");
+                        file.oleFile = null;
+                        setupFileScroller(fileList);
                     })
                     .then(content => {
-                        displayResults(new Uint8Array(content));
+                        setupFileScroller(fileList);
+                        handleFile(file, new Uint8Array(content));
                     });
             }
         });
         reader.readAsArrayBuffer(file);
-        // only read first file for now
-        break;
     }
 });
+
+function setupFileScroller(fileList) {
+    if (Array.from(fileList).some(f => f.oleFile === undefined)) return;
+    fileScroller.classList.remove("hidden");
+    for (let file of fileList) {
+        if (file === null) continue;
+        const div = document.createElement("div");
+        div.classList.add("file-scroller-entry");
+        div.classList.add("file-scroller-file-button");
+        div.classList.add("file-input-button");
+        const fileNameDiv = document.createElement("div");
+        fileNameDiv.innerText = file.name;
+        fileNameDiv.classList.add("ellipsis-text");
+
+        const icon = document.createElement("i");
+        icon.classList.add("fas");
+        icon.classList.add("fa-lg");
+        if (file.oleFile) {
+            if (file.oleFile.isMalicious) {
+                icon.classList.add("fa-skull");
+            } else {
+                icon.classList.add("fa-check");
+            }
+
+            div.dataset.fileId = file.oleFile.id;
+
+            div.addEventListener("click", () => {
+                displayFile(file);
+            });
+        }
+
+        div.appendChild(fileNameDiv);
+        div.appendChild(icon);
+
+        fileScroller.appendChild(div);
+    }
+    selectFileButton(activeFileId);
+}
 
 function isOleFile(binContent) {
     const magic = readByteArray(binContent, {value: 0}, 8);
@@ -99,13 +145,36 @@ function isZipFile(binContent) {
     return magic[0] === 0x50 && magic[1] === 0x4B && magic[2] === 0x03 && magic[3] === 0x04;
 }
 
-function displayResults(binaryArray) {
+function prepareFile(binaryArray) {
     const oleFile = new OLEFile(binaryArray);
     openedFiles.push(oleFile);
+    oleFile.analysisResult = analyzeFile(oleFile);
+    return oleFile;
+}
+
+function setupFilePreview(file) {
+    document.getElementById("file-preview").classList.remove("hidden");
+    document.getElementById("file-name").innerText = file.name;
+    document.getElementById("file-size").innerText = getReadableFileSizeString(file.size);
+    setFilePreviewImage(file.name.split(".")[1]);
+}
+
+function selectFileButton(id) {
+    const fileButton = fileScroller.querySelector(`.file-scroller-file-button[data-file-id="${id}"]`);
+    if (fileButton) {
+        fileButton.classList.add("button-selected");
+    }
+}
+
+function displayFile(file) {
+    const oleFile = file.oleFile;
+    fileScroller.querySelectorAll(".file-scroller-file-button").forEach(f => f.classList.remove("button-selected"));
+    selectFileButton(oleFile.id);
     activeFileId = oleFile.id;
-    //TODO create NEW tabs for each file
+    setupFilePreview(file);
     document.getElementsByClassName("tabs")[0].dataset.fileId = oleFile.id;
-    tabTextElement(sourceCodeTab).innerHTML = "<div class=\"direct-child flex-child\"></div><div class=\"direct-child flex-child border-left hidden\"></div>";
+    sourceCodeTab.querySelectorAll(".tab-text .direct-child")[0].innerHTML = "";
+    sourceCodeTab.querySelectorAll(".tab-text .direct-child")[1].innerHTML = "";
     tabTextElement(analysisTab).innerHTML = "";
     tabTextElement(deobfuscatedCodeTab).innerHTML = "";
     if (oleFile.macroModules.length === 0) {
@@ -128,14 +197,9 @@ function displayResults(binaryArray) {
         return;
     }
 
-    //macroSourceCodes = [ss_code];
-
     for (let i = 0; i < oleFile.macroModules.length; i++) {
         const module = oleFile.macroModules[i];
         let macroSourceCode = module.sourceCode;
-
-        //macroSourceCode = removeAttributes(macroSourceCode);
-
         const div = document.createElement("div");
         div.innerHTML = removeAttributes(macroSourceCode);
         //div.innerHTML = pcodeToSource(module.pcode); //PCODE2 DEBUG
@@ -163,12 +227,14 @@ function displayResults(binaryArray) {
     }
 
     const div = document.createElement("div");
-    div.innerHTML = analyzeFile(oleFile);
+    div.innerHTML = oleFile.analysisResult;
     div.classList.add("table-module");
     tabTextElement(analysisTab).appendChild(div);
     setFileResult(oleFile.isMalicious);
 
     deobfuscateModulesAndShow(oleFile.macroModules);
+
+    return oleFile;
 }
 
 function deobfuscateModulesAndShow(macroModules) {

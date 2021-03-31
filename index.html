@@ -9,6 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400&display=swap" rel="stylesheet">
 
+    <script src="https://kit.fontawesome.com/084fbcdbf5.js" crossorigin="anonymous"></script>
+
     <script>
         var global = global || window;
     </script>
@@ -16,12 +18,19 @@
 <body>
 <div class="blue-bg"></div>
 <div id="logo">MacroVirus Analyzer</div>
+
+<div id="file-scroller" class="hidden">
+    <div id="upload-button" class="file-scroller-entry file-input-button file-scroller-upload-button">
+        <i class="fas fa-lg fa-upload"></i>
+        <div>Upload</div>
+    </div>
+</div>
+
 <div class="outer-file-input">
     <div class="file-input" id="fake-file-selector">
         <span class="file-input-text" id="filename-display">Choose file...</span>
         <span class="file-input-button">Browse</span>
-        <input class="real-file-input" type="file" id="file-selector" accept=".docm, .xlsm, .doc, .xls">
-        <!-- todo add "multiple" when you're ready to handle multiple files -->
+        <input class="real-file-input" type="file" id="file-selector" accept=".docm, .xlsm, .doc, .xls" multiple>
     </div>
 </div>
 <div id="file-preview" class="file-preview hidden flexbox-space-between">
@@ -34,9 +43,6 @@
             <div id="file-size"></div>
             <div id="file-result"></div>
         </div>
-    </div>
-    <div id="upload-button" class="upload-button file-input-button">
-        Upload another file
     </div>
 </div>
 <div class="main-table hidden">
@@ -74,7 +80,7 @@
             </div>
             <div class="tab-text flexbox">
                 <div class="direct-child flex-child"></div>
-                <div class="direct-child"></div>
+                <div class="direct-child flex-child border-left hidden"></div>
             </div>
         </div>
         <div id="tab3" class="tab-contents">
