@@ -225,12 +225,14 @@ input:disabled + label {
 }
 
 .file-preview {
+    display: inline-block;
     background: white;
     padding: 10px;
     border: var(--border);
     border-radius: var(--border-radius);
     margin: 0 auto;
-    width: 250px;
+    min-width: 250px;
+    max-width: 600px;
     align-items: center;
 }
 
@@ -312,7 +314,6 @@ input:disabled + label {
     overflow: hidden;
     text-overflow: ellipsis;
 }
-
 
 #file-scroller::-webkit-scrollbar {
     width: 20px;

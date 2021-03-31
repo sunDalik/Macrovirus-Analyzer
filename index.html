@@ -20,6 +20,7 @@
 <div id="logo">MacroVirus Analyzer</div>
 
 <div id="file-scroller" class="hidden">
+    <!--TODO UPLOAD BUTTON SHOULD ALWAYS STAY AT THE TOP-->
     <div id="upload-button" class="file-scroller-entry file-input-button file-scroller-upload-button">
         <i class="fas fa-lg fa-upload"></i>
         <div>Upload</div>
@@ -33,15 +34,17 @@
         <input class="real-file-input" type="file" id="file-selector" accept=".docm, .xlsm, .doc, .xls" multiple>
     </div>
 </div>
-<div id="file-preview" class="file-preview hidden flexbox-space-between">
-    <div class="flexbox">
-        <div class="file-img-box">
-            <img id="file-icon" class="file-format-icon" src="images/doc.png" alt="File Icon">
-        </div>
-        <div class="file-info">
-            <div id="file-name"></div>
-            <div id="file-size"></div>
-            <div id="file-result"></div>
+<div class="flexbox">
+    <div id="file-preview" class="file-preview hidden">
+        <div class="flexbox">
+            <div class="file-img-box">
+                <img id="file-icon" class="file-format-icon" src="images/doc.png" alt="File Icon">
+            </div>
+            <div class="file-info">
+                <div id="file-name" class="ellipsis-text"></div>
+                <div id="file-size"></div>
+                <div id="file-result"></div>
+            </div>
         </div>
     </div>
 </div>
