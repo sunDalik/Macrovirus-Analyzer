@@ -258,10 +258,6 @@ input:disabled + label {
     color: #de454a;
 }
 
-#file-result {
-    font-weight: bold;
-}
-
 .flexbox-space-between {
     display: flex;
     flex-direction: row;
@@ -332,4 +328,12 @@ input:disabled + label {
 
 #file-scroller::-webkit-scrollbar-thumb:hover {
     background-color: #acb7c1;
+}
+
+.bold {
+    font-weight: bold;
+}
+
+.fa-1em {
+    font-size: 1em;
 }

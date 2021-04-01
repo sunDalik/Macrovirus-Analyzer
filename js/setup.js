@@ -305,15 +305,12 @@ function tabTextElement(tabElement) {
 }
 
 function setFileResult(isMalicious) {
-    const fileResultElement = document.getElementById("file-result");
-    fileResultElement.classList.remove("good-file-color");
-    fileResultElement.classList.remove("bad-file-color");
+    document.getElementById("file-result-safe").classList.add("hidden");
+    document.getElementById("file-result-malicious").classList.add("hidden");
     if (isMalicious) {
-        fileResultElement.classList.add("bad-file-color");
-        fileResultElement.innerText = "Malicious";
+        document.getElementById("file-result-malicious").classList.remove("hidden");
     } else {
-        fileResultElement.classList.add("good-file-color");
-        fileResultElement.innerText = "Safe";
+        document.getElementById("file-result-safe").classList.remove("hidden");
     }
 }
 
