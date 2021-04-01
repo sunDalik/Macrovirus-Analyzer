@@ -45,9 +45,9 @@ export function analyzeFile(oleFile) {
     const stompingDetectionResult = detectVBAStomping(oleFile);
     if (stompingDetectionResult.length > 0) {
         safe = false;
-        output += "Detected <b>VBA stomping</b>!\nKeywords missing from source code:\n";
+        output += "<div class='mb-s'>Detected <b>VBA stomping</b>!\nKeywords missing from source code:</div>";
         for (const res of stompingDetectionResult) {
-            output += `<li>Module: ${res.module.name}, Keyword: ${res.keyword}\n</li>`;
+            output += `<li>Module: ${res.module.name}, Keyword: ${res.keyword}</li>`;
         }
         output += "\n";
     }
@@ -81,10 +81,11 @@ export function analyzeFile(oleFile) {
         }
 
         if (foundWords.length !== 0) {
-            output += `Autoexec function <b>${func.name}</b> contains suspicious commands:\n\n`;
+            output += `<div class='mb-s'>Autoexec function <b>${func.name}</b> contains suspicious commands:</div>`;
             for (const word of foundWords) {
-                output += "<li>" + word + "</li>\n";
+                output += "<li>" + word + "</li>";
             }
+            output += "\n";
         }
     }
 

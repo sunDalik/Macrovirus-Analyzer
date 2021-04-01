@@ -337,3 +337,12 @@ input:disabled + label {
 .fa-1em {
     font-size: 1em;
 }
+
+li {
+    list-style: circle;
+    margin-left: 25px;
+}
+
+.mb-s {
+    margin-bottom: 8px;
+}
