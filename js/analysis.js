@@ -13,7 +13,8 @@ export const autoExecFunctions = [
     "Document_Open",
     "Document_Close",
     "Auto_Open",
-    "AutoOpen"
+    "AutoOpen",
+    "Workbook_BeforeClose"
 ];
 
 const suspiciousWords = [
@@ -41,9 +42,14 @@ export function analyzeFile(oleFile) {
     let safe = true;
     let output = "";
 
-    if (detectVBAStomping(oleFile)) {
+    const stompingDetectionResult = detectVBAStomping(oleFile);
+    if (stompingDetectionResult.length > 0) {
         safe = false;
-        output += "Detected VBA stomping!\n";
+        output += "Detected <b>VBA stomping</b>!\nKeywords missing from source code:\n";
+        for (const res of stompingDetectionResult) {
+            output += `<li>Module: ${res.module.name}, Keyword: ${res.keyword}\n</li>`;
+        }
+        output += "\n";
     }
 
     for (const func of oleFile.VBAFunctions) {

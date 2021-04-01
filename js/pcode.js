@@ -451,7 +451,7 @@ function getPCodeLine(moduleData, lineStart, lineLength, vbaVer, identifiers, ob
             line += `(${specials[opType]})`;
         } else if (['ArgsCall', 'ArgsMemCall', 'ArgsMemCallWith'].includes(mnemonic)) {
             if (opType < 16) {
-                line += "(Call)";
+                line += "(Call) ";
             } else {
                 opType -= 16;
             }

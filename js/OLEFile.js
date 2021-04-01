@@ -59,6 +59,9 @@ export class OLEFile {
             || this.findByPath(this.fileTree, "VBA")
             || this.findByPath(this.fileTree, "_VBA_PROJECT_CUR/VBA");
 
+        //const wb = this.findByPath(this.fileTree, "Workbook");
+        //console.log(byteArrayToStr(this.readStream(wb.startingSector, wb.streamSize)));
+
         if (vbaFolder) {
             const modules = [];
             let dirStream = null;
