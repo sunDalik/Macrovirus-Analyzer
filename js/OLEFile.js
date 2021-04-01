@@ -55,14 +55,9 @@ export class OLEFile {
         this.fileTree = this.readFileTree(firstDirectorySector);
         this.miniStream = this.readSectorChainFAT(this.fileTree.startingSector);
 
-        // all names are case-insensitive
-        const macrosFolder = this.fileTree.children.find(dir => dir.name.toUpperCase() === "MACROS");
-        let vbaFolder = null;
-        if (macrosFolder) {
-            vbaFolder = macrosFolder.children.find(dir => dir.name.toUpperCase() === "VBA");
-        } else {
-            vbaFolder = this.fileTree.children.find(dir => dir.name.toUpperCase() === "VBA");
-        }
+        const vbaFolder = this.findByPath(this.fileTree, "MACROS/VBA")
+            || this.findByPath(this.fileTree, "VBA")
+            || this.findByPath(this.fileTree, "_VBA_PROJECT_CUR/VBA");
 
         if (vbaFolder) {
             const modules = [];
@@ -229,6 +224,16 @@ export class OLEFile {
                 this.macroModules.push(macroModule);
             }
         }
+    }
+
+    findByPath(tree, path) {
+        const pathArray = path.split("/");
+        let currentFile = tree;
+        for (const segment of pathArray) {
+            currentFile = currentFile.children.find(f => f.name.toUpperCase() === segment.toUpperCase());
+            if (!currentFile) break;
+        }
+        return currentFile;
     }
 
     readNameReference(dirOffset, dirStream) {

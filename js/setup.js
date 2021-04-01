@@ -105,6 +105,7 @@ function setupFileScroller(fileList) {
         div.classList.add("file-scroller-entry");
         div.classList.add("file-scroller-file-button");
         div.classList.add("file-input-button");
+        //div.setAttribute("title", file.name);
         const fileNameDiv = document.createElement("div");
         fileNameDiv.innerText = file.name;
         fileNameDiv.classList.add("ellipsis-text");
