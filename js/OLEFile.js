@@ -18,7 +18,13 @@ export class OLEFile {
         this.macroModules = []; //name, sourceCode, pcode
         this.fileTree = {};
         this.binContent = binContent;
-        this.readFile(this.binContent);
+        this.readError = false;
+        try {
+            this.readFile(this.binContent);
+        } catch (e) {
+            console.log("ERROR READING OLEFILE " + this.id);
+            this.readError = true;
+        }
         this.isMalicious = false;
         this.analysisResult = "";
 

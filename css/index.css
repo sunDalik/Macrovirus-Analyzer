@@ -258,6 +258,10 @@ input:disabled + label {
     color: #de454a;
 }
 
+.corrupted-file-color, .fa-times {
+    color: #333333;
+}
+
 .flexbox-space-between {
     display: flex;
     flex-direction: row;

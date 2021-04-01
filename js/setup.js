@@ -114,7 +114,9 @@ function setupFileScroller(fileList) {
         icon.classList.add("fas");
         icon.classList.add("fa-lg");
         if (file.oleFile) {
-            if (file.oleFile.isMalicious) {
+            if (file.oleFile.readError) {
+                icon.classList.add("fa-times");
+            } else if (file.oleFile.isMalicious) {
                 icon.classList.add("fa-skull");
             } else {
                 icon.classList.add("fa-check");
@@ -178,8 +180,26 @@ function displayFile(file) {
     sourceCodeTab.querySelectorAll(".tab-text .direct-child")[1].innerHTML = "";
     tabTextElement(analysisTab).innerHTML = "";
     tabTextElement(deobfuscatedCodeTab).innerHTML = "";
-    if (oleFile.macroModules.length === 0) {
+    if (oleFile.readError) {
+        let div = document.createElement("div");
+        div.innerHTML = "Error reading file";
+        div.classList.add("table-module");
+        tabTextElement(analysisTab).appendChild(div);
 
+        div = document.createElement("div");
+        div.innerHTML = "Error reading file";
+        div.classList.add("table-module");
+        sourceCodeTab.querySelectorAll(".tab-text .direct-child")[0].appendChild(div);
+
+        div = document.createElement("div");
+        div.innerHTML = "Error reading file";
+        div.classList.add("table-module");
+        tabTextElement(deobfuscatedCodeTab).appendChild(div);
+        setFileResult(oleFile);
+        return;
+    }
+
+    if (oleFile.macroModules.length === 0) {
         let div = document.createElement("div");
         div.innerHTML = "Module is safe!\n(No macro scripts detected)";
         div.classList.add("table-module");
@@ -194,7 +214,7 @@ function displayFile(file) {
         div.innerHTML = "<i>No macro scripts detected</i>";
         div.classList.add("table-module");
         tabTextElement(deobfuscatedCodeTab).appendChild(div);
-        setFileResult(false);
+        setFileResult(oleFile);
         return;
     }
 
@@ -231,7 +251,7 @@ function displayFile(file) {
     div.innerHTML = oleFile.analysisResult;
     div.classList.add("table-module");
     tabTextElement(analysisTab).appendChild(div);
-    setFileResult(oleFile.isMalicious);
+    setFileResult(oleFile);
 
     deobfuscateModulesAndShow(oleFile.macroModules);
 
@@ -304,10 +324,13 @@ function tabTextElement(tabElement) {
     return tabElement.querySelector(".tab-text");
 }
 
-function setFileResult(isMalicious) {
+function setFileResult(oleFile) {
     document.getElementById("file-result-safe").classList.add("hidden");
     document.getElementById("file-result-malicious").classList.add("hidden");
-    if (isMalicious) {
+    document.getElementById("file-result-corrupted").classList.add("hidden");
+    if (oleFile.readError) {
+        document.getElementById("file-result-corrupted").classList.remove("hidden");
+    } else if (oleFile.isMalicious) {
         document.getElementById("file-result-malicious").classList.remove("hidden");
     } else {
         document.getElementById("file-result-safe").classList.remove("hidden");
