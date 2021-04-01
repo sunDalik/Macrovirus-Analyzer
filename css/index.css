@@ -346,3 +346,14 @@ li {
 .mb-s {
     margin-bottom: 8px;
 }
+
+.sneaky {
+    opacity: 0.5;
+}
+
+.list-flex-sb {
+    display: inline-flex;
+    width: calc(100% - 25px); /* 25px is a margin-left of a list item */
+    flex-direction: row;
+    justify-content: space-between;
+}

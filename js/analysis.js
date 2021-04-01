@@ -47,7 +47,7 @@ export function analyzeFile(oleFile) {
         safe = false;
         output += "<div class='mb-s'>Detected <b>VBA stomping</b>!\nKeywords missing from source code:</div>";
         for (const res of stompingDetectionResult) {
-            output += `<li>Module: ${res.module.name}, Keyword: ${res.keyword}</li>`;
+            output += `<li><span class="list-flex-sb"><span>${res.keyword}</span><span class="sneaky">(${res.module.name})</span></span></li>`;
         }
         output += "\n";
     }
