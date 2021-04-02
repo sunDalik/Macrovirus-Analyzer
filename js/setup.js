@@ -10,7 +10,7 @@ global = window;
 setupLocalStorage();
 
 let activeFileId = 0;
-const openedFiles = [];
+let openedFiles = [];
 
 const fileSelector = document.getElementById('file-selector');
 const fakeFileSelector = document.getElementById('fake-file-selector');
@@ -46,6 +46,7 @@ fileSelector.addEventListener("input", e => {
         setupFileScroller(fileList);
     };
 
+    openedFiles = [];
     for (let file of fileList) {
         if (file === null) continue;
         fileNameSpan.innerText = file.name;
