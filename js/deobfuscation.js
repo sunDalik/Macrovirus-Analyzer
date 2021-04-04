@@ -11,6 +11,12 @@ export const keywordRegex = (keyword, i = false) => {
     return new RegExp(`^(?<before>(?:[^"]*?"[^"]*?")*?[^"]*?)\\b${keyword}\\b`, flags);
 };
 
+export const stringRegex = (str, i = false) => {
+    let flags = "g";
+    if (i) flags += "i";
+    return new RegExp(`\"${str}\"`, flags);
+};
+
 export const dllDeclarationRegex = new RegExp(`^[ \\t]*((Public|Private)[ \\t]+)?Declare[ \\t]+(Sub|Function)[ \\t]+(?<functionName>${varName})`);
 
 const forRegex = new RegExp(`^[ \\t]*For[ \\t]+(?<iteratorVariable>${varName})[ \\t]*=[ \\t]*$`);

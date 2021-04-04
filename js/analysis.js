@@ -5,16 +5,16 @@ import {
     functionEndRegex,
     keywordRegex,
     removeColonDelimiters,
-    removeComments
+    removeComments, stringRegex
 } from "./deobfuscation";
 
 export const autoExecFunctions = [
-    "Workbook_Open",
-    "Document_Open",
-    "Document_Close",
-    "Auto_Open",
-    "AutoOpen",
-    "Workbook_BeforeClose"
+    /Workbook_Open/i,
+    /Document_Open/i,
+    /Document_Close/i,
+    /Auto_?Open/i,
+    /Workbook_BeforeClose/i,
+    /\w+_Layout/i
 ];
 
 const suspiciousWords = [
@@ -24,14 +24,16 @@ const suspiciousWords = [
     "Open",
     "Get",
 
-    // File downloading
-    "Microsoft.XMLHTTP",
-
     // File execution
     "Shell",
     "Create", // https://docs.microsoft.com/en-us/windows/win32/cimwin32prov/create-method-in-class-win32-process
     "CreateObject",
     "GetObject"
+];
+
+const suspiciousStrings = [
+    // File downloading
+    "Microsoft.XMLHTTP"
 ];
 
 const suspiciousRegex = [
@@ -73,6 +75,14 @@ export function analyzeFile(oleFile) {
                 safe = false;
             }
         }
+
+        for (const str of suspiciousStrings) {
+            if (stringRegex(str, true).test(fullBody)) {
+                foundWords.push("\"" + str + "\"");
+                safe = false;
+            }
+        }
+
         for (const susReg of suspiciousRegex) {
             if (susReg.regex.test(fullBody)) {
                 foundWords.push(susReg.description);
@@ -161,7 +171,7 @@ export function prepareForAnalysis(code) {
 }
 
 export function isAutoExec(func) {
-    return autoExecFunctions.map(f => f.toLowerCase()).includes(func.toLowerCase());
+    return autoExecFunctions.some(f => f.test(func));
 }
 
 function getAllDependencies(func, VBAFunctions) {
