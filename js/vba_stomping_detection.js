@@ -1,5 +1,9 @@
 export function detectVBAStomping(oleFile) {
     const result = [];
+    let fullSourceCode = "";
+    for (const module of oleFile.macroModules) {
+        fullSourceCode += module.sourceCode + " ";
+    }
     for (const module of oleFile.macroModules) {
         const keywords = new Set();
         for (const command of module.pcode) {
@@ -38,7 +42,7 @@ export function detectVBAStomping(oleFile) {
 
         for (const keyword of keywords.values()) {
             if (keyword === "undefined") continue;
-            if (!module.sourceCode.includes(keyword)) {
+            if (!fullSourceCode.toLowerCase().includes(keyword.toLowerCase())) {
                 result.push({module: module, keyword: keyword});
             }
         }

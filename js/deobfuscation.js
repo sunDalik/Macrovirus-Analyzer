@@ -3,7 +3,7 @@ import {isAutoExec} from "./analysis";
 
 const varName = "[A-Za-z][A-Za-z0-9_\-]*";
 
-export const functionDeclarationRegex = new RegExp(`^[ \\t]*((Public|Private)[ \\t]+)?(Sub|Function)[ \\t]+(?<functionName>${varName})[ \\t]*\\(.*\\)[ \\t]*$`, 'm');
+export const functionDeclarationRegex = new RegExp(`^[ \\t]*((Public|Private)[ \\t]+)?(Sub|Function)[ \\t]+(?<functionName>${varName})[ \\t]*\\(.*\\)`);
 export const functionEndRegex = new RegExp(`^[ \\t]*End[ \\t]*(Sub|Function)[ \\t]*$`, 'm');
 export const keywordRegex = (keyword, i = false) => {
     let flags = "g";
@@ -22,8 +22,8 @@ export const dllDeclarationRegex = new RegExp(`^[ \\t]*((Public|Private)[ \\t]+)
 const forRegex = new RegExp(`^[ \\t]*For[ \\t]+(?<iteratorVariable>${varName})[ \\t]*=[ \\t]*$`);
 
 const variableDeclarationRegex = new RegExp(`(^[ \\t]*(Set|Dim)[ \\t]+(?<variableName>${varName}).*?$)|(^[ \\t]*(?<variableName2>${varName})([ \\t]*\\(.+?\\))?[ \\t]*=.*?$)`);
-const fullLineCommentRegex = new RegExp(`^[ \\t]*'.*$`);
-const commentRegex = new RegExp(`^(?<before_comment>(?:[^"]*?"[^"]*?")*?[^"]*?)(?<comment>'.*)$`);
+const fullLineCommentRegex = new RegExp(`^[ \\t]*'.*`);
+const commentRegex = new RegExp(`^(?<before_comment>(?:[^"]*?"[^"]*?")*?[^"]*?)(?<comment>'.*)`);
 const lineBreakRegex = new RegExp(` _(\r\n|\r|\n)`, "g");
 const colonDelimiterRegex = new RegExp(`:(?!=)`, "g");
 

@@ -39,8 +39,10 @@ export function pcodeToSource(pcodeLines) {
                 currentLine += "Exit Function";
             } else if (line.startsWith("EndFunc")) {
                 currentLine += "End Function";
-            } else if (line.startsWith("Next")) {
+            } else if (line.startsWith("Next ")) {
                 currentLine += "Next";
+            } else if (line.startsWith("NextVar ")) {
+                currentLine += "Next " + stack.pop();
             } else if (line.startsWith("ArgsLd")) {
                 const funcName = line.match(new RegExp("^ArgsLd (?<fun>.+) 0x.+$")).groups.fun;
                 const argNum = parseInt(line.match(new RegExp("^ArgsLd .+ (?<value>0x.+)$")).groups.value);
@@ -56,7 +58,7 @@ export function pcodeToSource(pcodeLines) {
                 }
                 funcString += ")";
                 stack.push(funcString);
-            } else if (line.startsWith("ArgsMemLd")) {
+            } else if (line.startsWith("ArgsMemLd ")) {
                 const funcName = stack.pop() + "." + line.match(new RegExp("^ArgsMemLd (?<fun>.+) 0x.+$")).groups.fun;
                 const argNum = parseInt(line.match(new RegExp("^ArgsMemLd .+ (?<value>0x.+)$")).groups.value);
                 const args = getReverseArgList(stack, argNum);
@@ -71,8 +73,23 @@ export function pcodeToSource(pcodeLines) {
                 }
                 funcString += ")";
                 stack.push(funcString);
+            } else if (line.startsWith("ArgsMemLdWith ")) {
+                const funcName = "." + line.match(new RegExp("^ArgsMemLdWith (?<fun>.+) 0x.+$")).groups.fun;
+                const argNum = parseInt(line.match(new RegExp("^ArgsMemLdWith .+ (?<value>0x.+)$")).groups.value);
+                const args = getReverseArgList(stack, argNum);
+
+                let funcString = "";
+                funcString += funcName + "(";
+                for (let i = 0; i < argNum; i++) {
+                    funcString += args[i];
+                    if (i !== argNum - 1) {
+                        funcString += ", ";
+                    }
+                }
+                funcString += ")";
+                stack.push(funcString);
             } else if (line.startsWith("SetStmt")) {
-            } else if (line.startsWith("Set")) {
+            } else if (line.startsWith("Set ")) {
                 currentLine += "Set " + line.match(new RegExp("^Set (?<name>.+)$")).groups.name;
                 currentLine += " = " + stack.pop();
             } else if (line.startsWith("St ")) {
@@ -91,8 +108,10 @@ export function pcodeToSource(pcodeLines) {
                         currentLine += ",";
                     }
                 }
-            } else if (line.startsWith("MemSt")) {
+            } else if (line.startsWith("MemSt ")) {
                 currentLine += stack.pop() + "." + line.match(new RegExp("^MemSt (?<field>.+)$")).groups.field + " = " + stack.pop();
+            } else if (line.startsWith("MemStWith ")) {
+                currentLine += "." + line.match(new RegExp("^MemStWith (?<field>.+)$")).groups.field + " = " + stack.pop();
             } else if (line.startsWith("Concat")) {
                 const second = stack.pop();
                 stack.push(stack.pop() + " & " + second);
@@ -149,12 +168,35 @@ export function pcodeToSource(pcodeLines) {
             } else if (line.startsWith("Or")) {
                 const second = stack.pop();
                 stack.push(stack.pop() + " Or " + second);
+            } else if (line.startsWith("Xor")) {
+                const second = stack.pop();
+                stack.push(stack.pop() + " Xor " + second);
             } else if (line.startsWith("Gt")) {
                 const second = stack.pop();
                 stack.push(stack.pop() + " > " + second);
-            }else if (line.startsWith("Lt")) {
+            } else if (line.startsWith("Lt")) {
                 const second = stack.pop();
                 stack.push(stack.pop() + " < " + second);
+            } else if (line.startsWith("OnError")) {
+                currentLine += "On Error GoTo " + line.match(new RegExp("^OnError (?<handler>.+)$")).groups.handler;
+            } else if (line.startsWith("Label")) {
+                currentLine += line.match(new RegExp("^Label (?<label>.+)$")).groups.label + ":";
+            } else if (line.startsWith("FnLen")) {
+                stack.push("Len(" + stack.pop() + ")");
+            } else if (line.startsWith("For")) {
+                const end = stack.pop();
+                const start = stack.pop();
+                const varName = stack.pop();
+                currentLine += "For " + varName + " = " + start + " To " + end;
+            } else if (line.startsWith("ElseBlock")) {
+                currentLine += "Else";
+            } else if (line.startsWith("Coerce ")) {
+                const type = line.match(new RegExp("^Coerce \\((?<type>.+)\\)$")).groups.type;
+                stack.push("C" + type + "(" + stack.pop() + ")");
+            } else if (line.startsWith("With ")) {
+                currentLine += "With " + stack.pop();
+            }else if (line.startsWith("EndWidth")) {
+                currentLine += "End With";
             }
 
 

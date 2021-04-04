@@ -1,14 +1,21 @@
-import {byteArrayToStr, readInt, skipStructure} from "./file_processor";
-
-let is64bit = true; //?
+import {byteArrayToStr, readByteArray, readInt, skipStructure} from "./file_processor";
 
 // Algorithms taken from this repository
 // https://github.com/bontchev/pcodedmp
 
-export function disassemblePCode(moduleData, vbaProjectData) {
+export function disassemblePCode(moduleData, vbaProjectData, dirData) {
+    const is64bit = processDirData(dirData);
     const identifiers = getIdentifiers(vbaProjectData);
     let vbaVer = 3;
-    let offset = {value: 2};
+    let offset = {value: 0};
+    const endianness = readInt(moduleData, offset, 2);
+    let endian;
+    if (endianness > 0xFF) {
+        endian = '>';
+    } else {
+        endian = '<';
+    }
+    //console.log("pcode endian = " + endian);
     let version = readInt(vbaProjectData, offset, 2);
     let dwLength, declarationTable, tableStart, indirectTable, dwLength2, objectTable;
     let offs = {value: 0};
@@ -74,9 +81,44 @@ export function disassemblePCode(moduleData, vbaProjectData) {
         const lineLength = readInt(moduleData, offset, 2);
         offset.value += 2;
         const lineOffset = readInt(moduleData, offset, 4);
-        pcode.push(getPCodeLine(moduleData, pcodeStart + lineOffset, lineLength, vbaVer, identifiers, objectTable, indirectTable, declarationTable));
+        pcode.push(getPCodeLine(moduleData, pcodeStart + lineOffset, lineLength, vbaVer, identifiers, objectTable, indirectTable, declarationTable, is64bit));
     }
     return pcode;
+}
+
+function processDirData(dirData) {
+    const offset = {value: 0};
+    const codeModules = [];
+    let is64bit = false;
+    while (offset.value < dirData.length) {
+        try {
+            const tag = readInt(dirData, offset, 2);
+            let wLength = readInt(dirData, offset, 2);
+            if (tag === 9) {
+                wLength = 6;
+            } else if (tag === 3) {
+                wLength = 2;
+            }
+            offset.value += 2;
+            if (wLength) {
+                if (tag === 3) {
+                    const codepage = readInt(dirData, {value: offset.value}, 2);
+                    //TODO
+                } else if (tag === 50) {
+                    const streamName = readByteArray(dirData, {value: offset.value}, wLength);
+                    codeModules.push(byteArrayToStr(streamName));
+                } else if (tag === 1) {
+                    const sysKind = readInt(dirData, {value: offset.value}, 4);
+                    is64bit = sysKind === 3;
+                }
+
+                offset.value += wLength;
+            }
+        } catch (e) {
+            break;
+        }
+    }
+    return is64bit;
 }
 
 const opcodes = {
@@ -346,7 +388,7 @@ const opcodes = {
     263: {mnem: 'Illegal', args: [], varg: false}
 };
 
-function translateOpcode(opcode, vbaVer) {
+function translateOpcode(opcode, vbaVer, is64bit) {
     if (vbaVer === 3) {
         if (opcode <= 67) {
             return opcode;
@@ -400,7 +442,7 @@ function translateOpcode(opcode, vbaVer) {
     }
 }
 
-function getPCodeLine(moduleData, lineStart, lineLength, vbaVer, identifiers, objectTable, indirectTable, declarationTable) {
+function getPCodeLine(moduleData, lineStart, lineLength, vbaVer, identifiers, objectTable, indirectTable, declarationTable, is64bit) {
     let varTypesLong = ['Var', '?', 'Int', 'Lng', 'Sng', 'Dbl', 'Cur', 'Date', 'Str', 'Obj', 'Err', 'Bool', 'Var'];
     let specials = ['False', 'True', 'Null', 'Empty'];
     let options = ['Base 0', 'Base 1', 'Compare Text', 'Compare Binary', 'Explicit', 'Private Module'];
@@ -415,7 +457,7 @@ function getPCodeLine(moduleData, lineStart, lineLength, vbaVer, identifiers, ob
         let opcode = readInt(moduleData, offset, 2);
         let opType = (opcode & ~0x03FF) >> 10;
         opcode &= 0x03FF;
-        let translatedOpcode = translateOpcode(opcode, vbaVer);
+        let translatedOpcode = translateOpcode(opcode, vbaVer, is64bit);
         if (!opcodes.hasOwnProperty(translatedOpcode)) {
             return `Unrecognized opcode ${hexNum(opcode)} at offset ${hexNum(offset.value, 8)}}`;
         }
@@ -465,16 +507,16 @@ function getPCodeLine(moduleData, lineStart, lineLength, vbaVer, identifiers, ob
         for (const arg of instruction.args) {
             if (arg === 'name') {
                 const word = readInt(moduleData, offset, 2);
-                const theName = disasmName(word, identifiers, mnemonic, opType, vbaVer);
+                const theName = disasmName(word, identifiers, mnemonic, opType, vbaVer, is64bit);
                 line += theName;
             } else if (['0x', 'imp_'].includes(arg)) {
                 const word = readInt(moduleData, offset, 2);
-                const theImp = disasmImp(objectTable, identifiers, arg, word, mnemonic, vbaVer);
+                const theImp = disasmImp(objectTable, identifiers, arg, word, mnemonic, vbaVer, is64bit);
                 line += theImp;
             } else if (['func_', 'var_', 'rec_', 'type_', 'context_'].includes(arg)) {
                 let dword = readInt(moduleData, offset, 4);
                 if ((arg === 'rec_') && (indirectTable.length >= dword + 20)) {
-                    const theRec = disasmRec(indirectTable, identifiers, dword, vbaVer);
+                    const theRec = disasmRec(indirectTable, identifiers, dword, vbaVer, is64bit);
                     line += theRec;
                 } else if ((arg === 'type_') && (indirectTable.length >= dword + 7)) {
                     const theType = disasmType(indirectTable, dword);
@@ -483,14 +525,14 @@ function getPCodeLine(moduleData, lineStart, lineLength, vbaVer, identifiers, ob
                     if (opType & 0x20) {
                         line += "(WithEvents)";
                     }
-                    const theVar = disasmVar(indirectTable, objectTable, identifiers, dword, vbaVer);
+                    const theVar = disasmVar(indirectTable, objectTable, identifiers, dword, vbaVer, is64bit);
                     line += theVar;
                     if (opType & 0x10) {
                         const word = readInt(moduleData, offset, 2);
                         line += hexNum(word);
                     }
                 } else if ((arg === 'func_') && (indirectTable.length >= dword + 61)) {
-                    const theFunc = disasmFunc(indirectTable, declarationTable, identifiers, dword, opType, vbaVer);
+                    const theFunc = disasmFunc(indirectTable, declarationTable, identifiers, dword, opType, vbaVer, is64bit);
                     line += theFunc;
                 } else {
                     line += arg + hexNum(dword, 8) + " ";
@@ -503,7 +545,7 @@ function getPCodeLine(moduleData, lineStart, lineLength, vbaVer, identifiers, ob
         }
         if (instruction.varg) {
             let wLength = readInt(moduleData, offset, 2);
-            const theVarArg = disasmVarArg(moduleData, identifiers, offset.value, wLength, mnemonic, vbaVer);
+            const theVarArg = disasmVarArg(moduleData, identifiers, offset.value, wLength, mnemonic, vbaVer, is64bit);
             line += theVarArg;
             offset.value += wLength;
             if (wLength & 1) {
@@ -515,9 +557,9 @@ function getPCodeLine(moduleData, lineStart, lineLength, vbaVer, identifiers, ob
     return line;
 }
 
-function disasmName(word, identifiers, mnemonic, opType, vbaVer) {
+function disasmName(word, identifiers, mnemonic, opType, vbaVer, is64bit) {
     const varTypes = ['', '?', '%', '&', '!', '#', '@', '?', '$', '?', '?', '?', '?', '?'];
-    let varName = getID(word, identifiers, vbaVer);
+    let varName = getID(word, identifiers, vbaVer, is64bit);
     let strType;
     if (opType < varTypes.length) {
         strType = varTypes[opType];
@@ -545,7 +587,7 @@ function disasmName(word, identifiers, mnemonic, opType, vbaVer) {
     return varName + strType + ' ';
 }
 
-function getID(idCode, identifiers, vbaVer) {
+function getID(idCode, identifiers, vbaVer, is64bit) {
     const internalNames = [
         '<crash>', '0', 'Abs', 'Access', 'AddressOf', 'Alias', 'And', 'Any',
         'Append', 'Array', 'As', 'Assert', 'B', 'Base', 'BF', 'Binary',
@@ -609,11 +651,11 @@ function getID(idCode, identifiers, vbaVer) {
     }
 }
 
-function disasmImp(objectTable, identifiers, arg, word, mnemonic, vbaVer) {
+function disasmImp(objectTable, identifiers, arg, word, mnemonic, vbaVer, is64bit) {
     let impName = "";
     if (mnemonic !== 'Open') {
         if (arg === 'imp_' && (objectTable.length >= word + 8)) {
-            impName = getName(objectTable, identifiers, word + 6, vbaVer);
+            impName = getName(objectTable, identifiers, word + 6, vbaVer, is64bit);
         } else {
             impName = arg + word + " ";
         }
@@ -650,13 +692,13 @@ function disasmImp(objectTable, identifiers, arg, word, mnemonic, vbaVer) {
     return impName;
 }
 
-function getName(buffer, identifiers, offset, vbaVer) {
+function getName(buffer, identifiers, offset, vbaVer, is64bit) {
     const objectID = readInt(buffer, {value: offset}, 2);
-    return getID(objectID, identifiers, vbaVer);
+    return getID(objectID, identifiers, vbaVer, is64bit);
 }
 
-function disasmRec(indirectTable, identifiers, dword, vbaVer) {
-    let objectName = getName(indirectTable, identifiers, dword + 2, vbaVer);
+function disasmRec(indirectTable, identifiers, dword, vbaVer, is64bit) {
+    let objectName = getName(indirectTable, identifiers, dword + 2, vbaVer, is64bit);
     const options = readInt(indirectTable, {value: dword + 18}, 2);
     if ((options & 1) === 0) {
         objectName = '(Private) ' + objectName;
@@ -676,12 +718,12 @@ function disasmType(indirectTable, dword) {
     return typeName;
 }
 
-function disasmVar(indirectTable, objectTable, identifiers, dword, vbaVer) {
+function disasmVar(indirectTable, objectTable, identifiers, dword, vbaVer, is64bit) {
     const bFlag1 = indirectTable[dword];
     const bFlag2 = indirectTable[dword + 1];
     const hasAs = (bFlag1 & 0x20) !== 0;
     const hasNew = (bFlag2 & 0x20) !== 0;
-    let varName = getName(indirectTable, identifiers, dword + 2, vbaVer);
+    let varName = getName(indirectTable, identifiers, dword + 2, vbaVer, is64bit);
     if (hasNew || hasAs) {
         let varType = '';
         if (hasNew) {
@@ -703,7 +745,7 @@ function disasmVar(indirectTable, objectTable, identifiers, dword, vbaVer) {
                 let typeID = indirectTable[dword + offs];
                 typeName = getTypeName(typeID);
             } else {
-                typeName = disasmObject(indirectTable, objectTable, identifiers, dword + offs, vbaVer);
+                typeName = disasmObject(indirectTable, objectTable, identifiers, dword + offs, vbaVer, is64bit);
             }
             if (typeName.length > 0) {
                 varType += 'As ' + typeName;
@@ -732,7 +774,7 @@ function getTypeName(typeID) {
     return typeName;
 }
 
-function disasmObject(indirectTable, objectTable, identifiers, offset, vbaVer) {
+function disasmObject(indirectTable, objectTable, identifiers, offset, vbaVer, is64bit) {
     if (is64bit) {
         return '';
     }
@@ -757,10 +799,10 @@ function disasmObject(indirectTable, objectTable, identifiers, offset, vbaVer) {
     return typeName;
 }
 
-function disasmFunc(indirectTable, declarationTable, identifiers, dword, opType, vbaVer) {
+function disasmFunc(indirectTable, declarationTable, identifiers, dword, opType, vbaVer, is64bit) {
     let funcDecl = '(';
     let flags = readInt(indirectTable, {value: dword}, 2);
-    let subName = getName(indirectTable, identifiers, dword + 2, vbaVer);
+    let subName = getName(indirectTable, identifiers, dword + 2, vbaVer, is64bit);
     let offs2;
     if (vbaVer > 5) {
         offs2 = 4;
@@ -819,12 +861,12 @@ function disasmFunc(indirectTable, declarationTable, identifiers, dword, opType,
     }
     funcDecl += subName;
     if (hasDeclare) {
-        let libName = getName(declarationTable, identifiers, declOffset + 2, vbaVer);
+        let libName = getName(declarationTable, identifiers, declOffset + 2, vbaVer, is64bit);
         funcDecl += ' Lib "' + libName + '" ';
     }
     let argList = [];
     while ((argOffset !== 0xFFFFFFFF) && (argOffset !== 0) && (argOffset + 26 < indirectTable.length)) {
-        let argName = disasmArg(indirectTable, identifiers, argOffset, vbaVer);
+        let argName = disasmArg(indirectTable, identifiers, argOffset, vbaVer, is64bit);
         argList.push(argName);
         argOffset = readInt(indirectTable, {value: argOffset + 20}, 4);
     }
@@ -836,7 +878,7 @@ function disasmFunc(indirectTable, declarationTable, identifiers, dword, opType,
             let typeID = retType & 0x000000FF;
             typeName = getTypeName(typeID);
         } else {
-            typeName = getName(indirectTable, identifiers, retType + 6, vbaVer);
+            typeName = getName(indirectTable, identifiers, retType + 6, vbaVer, is64bit);
         }
         funcDecl += typeName;
     }
@@ -844,7 +886,7 @@ function disasmFunc(indirectTable, declarationTable, identifiers, dword, opType,
     return funcDecl;
 }
 
-function disasmArg(indirectTable, identifiers, argOffset, vbaVer) {
+function disasmArg(indirectTable, identifiers, argOffset, vbaVer, is64bit) {
     let flags = readInt(indirectTable, {value: argOffset}, 2);
     let offs;
     if (is64bit) {
@@ -852,7 +894,7 @@ function disasmArg(indirectTable, identifiers, argOffset, vbaVer) {
     } else {
         offs = 0;
     }
-    let argName = getName(indirectTable, identifiers, argOffset + 2, vbaVer);
+    let argName = getName(indirectTable, identifiers, argOffset + 2, vbaVer, is64bit);
     let argType = readInt(indirectTable, {value: argOffset + offs + 12}, 4);
     let argOpts = readInt(indirectTable, {value: argOffset + offs + 24}, 2);
     if (argOpts & 0x0004) {
@@ -876,7 +918,7 @@ function disasmArg(indirectTable, identifiers, argOffset, vbaVer) {
     return argName;
 }
 
-function disasmVarArg(moduleData, identifiers, offset, wLength, mnemonic, vbaVer) {
+function disasmVarArg(moduleData, identifiers, offset, wLength, mnemonic, vbaVer, is64bit) {
     let substring = moduleData.slice(offset, offset + wLength);
     let varArgName = hexNum(wLength) + " ";
     if (['LitStr', 'QuoteRem', 'Rem', 'Reparse'].includes(mnemonic)) {
@@ -886,7 +928,7 @@ function disasmVarArg(moduleData, identifiers, offset, wLength, mnemonic, vbaVer
         let vars = [];
         for (let i = 0; i < Math.floor(wLength / 2); i++) {
             let word = readInt(moduleData, offset1, 2);
-            vars.push(getID(word, identifiers, vbaVer));
+            vars.push(getID(word, identifiers, vbaVer, is64bit));
         }
         varArgName += vars.join(", ") + ' ';
     } else {

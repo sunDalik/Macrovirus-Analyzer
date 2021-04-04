@@ -15,7 +15,35 @@ export const autoExecFunctions = [
     /Document_Close/i,
     /Auto_?Open/i,
     /Workbook_BeforeClose/i,
-    /\w+_Layout/i
+    /Main/i, //TODO check if code module name contains autoexec AND has Main sub
+
+    // Some ActiveX stuff that I don't understand
+    /\w+_Layout/i,
+    /\w+_Resize/i,
+    /\w+_GotFocus/i,
+    /\w+_LostFocus/i,
+    /\w+_MouseHover/i,
+    /\w+_Click/i,
+    /\w+_Change/i,
+    /\w+_BeforeNavigate2/i,
+    /\w+_BeforeScriptExecute/i,
+    /\w+_DocumentComplete/i,
+    /\w+_DownloadBegin/i,
+    /\w+_DownloadComplete/i,
+    /\w+_FileDownload/i,
+    /\w+_NavigateComplete2/i,
+    /\w+_NavigateError/i,
+    /\w+_ProgressChange/i,
+    /\w+_PropertyChange/i,
+    /\w+_SetSecureLockIcon/i,
+    /\w+_StatusTextChange/i,
+    /\w+_TitleChange/i,
+    /\w+_MouseMove/i,
+    /\w+_MouseEnter/i,
+    /\w+_MouseLeave/i,
+    /\w+_OnConnecting/i,
+    /\w+_FollowHyperlink/i,
+    /\w+_ContentControlOnEnter/i
 ];
 
 const suspiciousWords = [

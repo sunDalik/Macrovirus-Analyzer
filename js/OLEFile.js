@@ -225,7 +225,7 @@ export class OLEFile {
                 macroModule.name = moduleRecord.name;
                 macroModule.sourceCode = byteArrayToStr(this.decompressVBASourceCode(dataArray.slice(moduleRecord.sourceOffset)));
                 try {
-                    macroModule.pcode = disassemblePCode(dataArray, vbaProjectStream);
+                    macroModule.pcode = disassemblePCode(dataArray, vbaProjectStream, dirStream);
                 } catch (e) {
                     console.log("PCODE DISASSEMBLING ERROR");
                     macroModule.pcode = [];
