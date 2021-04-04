@@ -223,7 +223,7 @@ function displayFile(file) {
         const module = oleFile.macroModules[i];
         let macroSourceCode = module.sourceCode;
         const div = document.createElement("div");
-        div.innerHTML = removeAttributes(macroSourceCode);
+        div.innerText = removeAttributes(macroSourceCode);
         //div.innerHTML = pcodeToSource(module.pcode); //PCODE2 DEBUG
         div.classList.add("table-module");
         div.classList.add("code");
@@ -231,7 +231,7 @@ function displayFile(file) {
             const header = document.createElement("div");
             header.classList.add("module-header");
             header.classList.add("table-module");
-            header.innerHTML = module.name;
+            header.innerText = module.name;
             sourceCodeTab.querySelectorAll(".tab-text .direct-child")[0].appendChild(header);
         }
         sourceCodeTab.querySelectorAll(".tab-text .direct-child")[0].appendChild(div);

@@ -1,5 +1,6 @@
 import {detectVBAStomping} from "./vba_stomping_detection";
 import {
+    collapseLongLines,
     dllDeclarationRegex,
     functionDeclarationRegex,
     functionEndRegex,
@@ -33,7 +34,10 @@ const suspiciousWords = [
 
 const suspiciousStrings = [
     // File downloading
-    "Microsoft.XMLHTTP"
+    "Microsoft.XMLHTTP",
+
+    // May run an executable or a system command
+    "Wscript.Shell"
 ];
 
 const suspiciousRegex = [
@@ -159,12 +163,12 @@ export function parseVBAFunctions(oleFile) {
         }
     }
 
-    console.log(VBAFunctions);
+    //console.log(VBAFunctions);
     return VBAFunctions;
 }
 
 export function prepareForAnalysis(code) {
-    //TODO collapse long lines
+    code = collapseLongLines(code);
     code = removeComments(code);
     code = removeColonDelimiters(code);
     return code;
