@@ -141,6 +141,20 @@ export function pcodeToSource(pcodeLines) {
                 currentLine += stack.pop();
             } else if (line.startsWith("New")) {
                 currentLine += "New ?";
+            } else if (line.startsWith("Not")) {
+                stack.push("Not " + stack.pop());
+            } else if (line.startsWith("And")) {
+                const second = stack.pop();
+                stack.push(stack.pop() + " And " + second);
+            } else if (line.startsWith("Or")) {
+                const second = stack.pop();
+                stack.push(stack.pop() + " Or " + second);
+            } else if (line.startsWith("Gt")) {
+                const second = stack.pop();
+                stack.push(stack.pop() + " > " + second);
+            }else if (line.startsWith("Lt")) {
+                const second = stack.pop();
+                stack.push(stack.pop() + " < " + second);
             }
 
 
