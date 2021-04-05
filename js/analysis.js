@@ -123,7 +123,7 @@ export function analyzeFile(oleFile) {
         }
 
         if (foundWords.length !== 0) {
-            output += `<div class='mb-s'>Autoexec function <b>${func.name}</b> contains suspicious commands:</div>`;
+            output += `<div class='mb-s'>Autoexec function <b>${func.name}</b> contains suspicious keywords:</div>`;
             for (const word of foundWords) {
                 output += "<li>" + word + "</li>";
             }

@@ -142,6 +142,8 @@ export function pcodeToSource(pcodeLines) {
 
             } else if (line.startsWith("Paren")) {
                 stack.push("(" + stack.pop() + ")");
+            } else if (line.startsWith("MemLdWith ")) {
+                stack.push("." + line.match(new RegExp("^MemLdWith (?<var>.+)$")).groups.var);
             } else if (line.startsWith("MemLd ")) {
                 stack.push(stack.pop() + "." + line.match(new RegExp("^MemLd (?<var>.+)$")).groups.var);
             } else if (line.startsWith("Eq")) {
@@ -193,9 +195,9 @@ export function pcodeToSource(pcodeLines) {
             } else if (line.startsWith("Coerce ")) {
                 const type = line.match(new RegExp("^Coerce \\((?<type>.+)\\)$")).groups.type;
                 stack.push("C" + type + "(" + stack.pop() + ")");
-            } else if (line.startsWith("With ")) {
+            } else if (line.startsWith("With")) {
                 currentLine += "With " + stack.pop();
-            }else if (line.startsWith("EndWidth")) {
+            } else if (line.startsWith("EndWith")) {
                 currentLine += "End With";
             }
 
