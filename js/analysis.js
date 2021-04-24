@@ -47,29 +47,23 @@ export const autoExecFunctions = [
 ];
 
 const suspiciousWords = [
-    // File system operations
-    "Kill",
-    "CreateTextFile",
-    "Open",
-    "Get",
-
-    // File execution
-    "Shell",
-    "Create", // https://docs.microsoft.com/en-us/windows/win32/cimwin32prov/create-method-in-class-win32-process
-    "CreateObject",
-    "GetObject"
+    {word: "Kill", description: "Deletes files"},
+    {word: "CreateTextFile", description: "Writes to file system"},
+    {word: "Open", description: "Opens a file"},
+    {word: "Get", description: "Can create shell to execute external programs"},
+    {word: "Shell", description: "Runs an executable or a system command"},
+    {word: "Create", description: "Can create shell to execute external programs"}, // https://docs.microsoft.com/en-us/windows/win32/cimwin32prov/create-method-in-class-win32-process
+    {word: "CreateObject", description: "Can create shell to execute external programs"},
+    {word: "GetObject", description: "Can get shell to execute external programs"}
 ];
 
 const suspiciousStrings = [
-    // File downloading
-    "Microsoft.XMLHTTP",
-
-    // May run an executable or a system command
-    "Wscript.Shell"
+    {string: "Microsoft.XMLHTTP", description: "Can download a file from the internet"},
+    {string: "Wscript.Shell", description: "Runs an executable or a system command"}
 ];
 
 const suspiciousRegex = [
-    {regex: /Options\..+[ \t]*=/, description: "Modifies word settings"}
+    {regex: /Options\..+[ \t]*=/, word: "Options", description: "Modifies word settings"}
 ];
 
 export function analyzeFile(oleFile) {
@@ -97,27 +91,27 @@ export function analyzeFile(oleFile) {
         fullBody = prepareForAnalysis(fullBody);
 
         if (funcDependencies.some(f => f.type === FuncType.DLL)) {
-            foundWords.push("Executes DLLs");
+            foundWords.push({word: "Lib", description: "Executes DLLs"});
             safe = false;
         }
 
         for (const word of suspiciousWords) {
-            if (keywordRegex(word).test(fullBody)) {
+            if (keywordRegex(word.word).test(fullBody)) {
                 foundWords.push(word);
                 safe = false;
             }
         }
 
         for (const str of suspiciousStrings) {
-            if (stringRegex(str, true).test(fullBody)) {
-                foundWords.push("\"" + str + "\"");
+            if (stringRegex(str.string, true).test(fullBody)) {
+                foundWords.push({word: "\"" + str.string + "\"", description: str.description});
                 safe = false;
             }
         }
 
         for (const susReg of suspiciousRegex) {
             if (susReg.regex.test(fullBody)) {
-                foundWords.push(susReg.description);
+                foundWords.push(susReg);
                 safe = false;
             }
         }
@@ -125,7 +119,7 @@ export function analyzeFile(oleFile) {
         if (foundWords.length !== 0) {
             output += `<div class='mb-s'>Autoexec function <b>${func.name}</b> contains suspicious keywords:</div>`;
             for (const word of foundWords) {
-                output += "<li>" + word + "</li>";
+                output += `<li><span>${word.word}</span><span class="keyword-description">(${word.description})</span></li>`;
             }
             output += "\n";
         }

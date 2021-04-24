@@ -351,8 +351,12 @@ li {
     margin-bottom: 8px;
 }
 
-.sneaky {
+.sneaky, .keyword-description {
     opacity: 0.5;
+}
+
+.keyword-description {
+    margin-left: 12px;
 }
 
 .list-flex-sb {
