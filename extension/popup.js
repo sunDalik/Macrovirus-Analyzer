@@ -7,13 +7,8 @@ chrome.storage.sync.get("files", ({files}) => {
 
     for (const file of filesList) {
         const div = document.createElement("div");
-        div.innerText = file;
+        div.innerHTML = "<b>" + file.filename + "</b><br>";
+        div.innerHTML += file.analysis + "<br>";
         document.body.appendChild(div);
     }
 });
-
-/*
-chrome.runtime.onMessage.addListener((msg) => {
-
-});
- */

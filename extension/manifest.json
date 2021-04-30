@@ -2,15 +2,19 @@
   "name": "Macro Virus analyzer extension",
   "description": "Automatically scans files for macro viruses",
   "version": "1.0",
-  "manifest_version": 3,
+  "manifest_version": 2,
   "background": {
-    "service_worker": "background.js"
+    "scripts": [
+      "app.js"
+    ],
+    "persistent": true
   },
   "permissions": [
     "storage",
-    "downloads"
+    "downloads",
+    "file://*/*"
   ],
-  "action": {
+  "browser_action": {
     "default_popup": "popup.html"
   }
 }

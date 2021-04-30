@@ -1,6 +1,6 @@
-//chrome.runtime.sendMessage({filename: "test.doc"});
-let filesList = [];
+import {processFile} from "./app/setup";
 
+let filesList = [];
 
 chrome.storage.sync.get("files", ({files}) => {
     filesList = files;
@@ -42,10 +42,14 @@ chrome.downloads.onChanged.addListener((e) => {
         console.log("Has completed!");
         const cacheEntry = downloadsCache.find(cacheEntry => cacheEntry.id === e.id);
         if (cacheEntry === undefined) return;
-        const filename = cacheEntry.filename;
-        filesList.push(filename);
-        chrome.storage.sync.set({files: filesList});
+        const file = {id: e.id, filename: cacheEntry.filename, analysis: "", isMalicious: false};
+        filesList.push(file);
+        processFile(file);
+        updateFileList();
         //TODO remove file entries when there are too many of them
     }
 });
 
+export function updateFileList() {
+    chrome.storage.sync.set({files: filesList});
+}

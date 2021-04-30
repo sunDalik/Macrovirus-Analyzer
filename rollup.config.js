@@ -6,7 +6,7 @@ import nodeGlobals from "rollup-plugin-node-globals";
 
 const production = process.env.NODE_ENV === "production";
 
-export default {
+export default [{
     input: './js/setup.js',
     output: {
         file: "app.js",
@@ -18,4 +18,16 @@ export default {
         builtins(),
         nodeGlobals()
     ].concat(production ? [terser()] : [])
-};
+}, {
+    input: './extension/background.js',
+    output: {
+        file: "extension/app.js",
+        format: "iife"
+    },
+    plugins: [
+        resolve({browser: true, preferBuiltins: true}),
+        commonjs({extensions: [".js"]}),
+        builtins(),
+        nodeGlobals()
+    ].concat(production ? [terser()] : [])
+}];
