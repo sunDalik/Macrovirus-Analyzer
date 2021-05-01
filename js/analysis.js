@@ -67,6 +67,14 @@ const suspiciousRegex = [
 ];
 
 export function analyzeFile(oleFile) {
+    if (oleFile.readError) {
+        return "Error reading file";
+    }
+
+    if (oleFile.macroModules.length === 0) {
+        return "Module is safe!\n(No macro scripts detected)";
+    }
+
     let safe = true;
     let output = "";
 

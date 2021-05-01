@@ -1,8 +1,8 @@
 import JSZip from "jszip";
-import {analyzeFile} from "./analysis";
-import {OLEFile} from "./OLEFile";
-import {readByteArray} from "./file_processor";
-import {updateFileList} from "../background";
+import {updateFileList} from "./background";
+import {OLEFile} from "../js/OLEFile";
+import {analyzeFile} from "../js/analysis";
+import {readByteArray} from "../js/file_processor";
 
 //global = window;
 
@@ -14,7 +14,7 @@ export function processFile(file) {
         const handleFile = (file, contents) => {
             const oleFile = new OLEFile(contents);
             file.analysis = analyzeFile(oleFile);
-            file.isMalicious = file.oleFile.isMalicious;
+            file.isMalicious = oleFile.isMalicious;
             updateFileList();
         };
 

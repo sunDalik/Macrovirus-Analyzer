@@ -1,6 +1,6 @@
 let filesList = [];
 
-chrome.storage.sync.get("files", ({files}) => {
+chrome.storage.local.get("files", ({files}) => {
     filesList = files;
     console.log(filesList);
     if (!filesList) filesList = [];

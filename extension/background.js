@@ -1,8 +1,8 @@
-import {processFile} from "./app/setup";
+import {processFile} from "./file_handling";
 
 let filesList = [];
 
-chrome.storage.sync.get("files", ({files}) => {
+chrome.storage.local.get("files", ({files}) => {
     filesList = files;
     if (!filesList) filesList = [];
 });
@@ -51,5 +51,5 @@ chrome.downloads.onChanged.addListener((e) => {
 });
 
 export function updateFileList() {
-    chrome.storage.sync.set({files: filesList});
+    chrome.storage.local.set({files: filesList});
 }
