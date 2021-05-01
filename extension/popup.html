@@ -3,10 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="styles.css">
+
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/084fbcdbf5.js" crossorigin="anonymous"></script>
 </head>
 <body>
-<div class=""></div>
+<div class="flexbox">
+    <div id="file-scroller">
+    </div>
 
+
+    <div class="main">
+        <div id="file-preview" class="file-preview">
+            <div class="file-info flexbox-column">
+                <div id="file-name" class="ellipsis-text"></div>
+                <div id="file-result-safe" class="hidden">
+                    <span class="good-file-color bold">Safe</span>
+                    <i class="fas fa-1em fa-check"></i>
+                </div>
+                <div id="file-result-malicious" class="hidden">
+                    <span class="bad-file-color bold">Malicious</span>
+                    <i class="fas fa-1em fa-skull"></i>
+                </div>
+            </div>
+        </div>
+        <div id="analysis" class="tab-contents"></div>
+    </div>
+</div>
 <script src="popup.js"></script>
 </body>
 </html>

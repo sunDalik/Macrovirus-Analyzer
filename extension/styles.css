@@ -1,1 +1,224 @@
-@import "../css/index.css";
+:root {
+    --border-radius: 5px;
+    --border-size: 1px;
+    --button-hover-offset: -1px;
+    --button-drop-shadow-size: 1px;
+    --default-font-family: 'Roboto', sans-serif;
+    --light-gray-color: #e5ebf1;
+    --gray-color: #c5cfd9;
+    --dark-gray-color: #53595f;
+    --blue-color: #4354cb;
+    --border: var(--border-size) solid var(--dark-gray-color);
+    --button-transition-time: 0.08s;
+    --main-table-width: 65%;
+}
+
+body {
+    width: 700px;
+    margin: 0;
+    font-size: 16px;
+    font-family: var(--default-font-family);
+    background-color: var(--gray-color);
+    overflow-x: hidden;
+}
+
+.real-file-input {
+    display: none;
+}
+
+.outer-file-input {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+.indent-small {
+    margin-left: 15px;
+}
+
+.flexbox {
+    display: flex;
+    flex-direction: row;
+}
+
+.flexbox-column {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.tab-contents {
+    border: var(--border);
+    padding: 10px;
+    background-color: white;
+    position: relative;
+    border-radius: 0 0 var(--border-radius) var(--border-radius);
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.flex-child {
+    flex-basis: 100%;
+}
+
+.border-left {
+    border-left: var(--border);
+}
+
+.malicious-keyword {
+    color: #db3c3c;
+    font-weight: bold;
+}
+
+.file-preview {
+    display: inline-block;
+    background: white;
+    padding: 10px;
+    border: var(--border);
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
+    align-items: center;
+}
+
+.file-info {
+    border-radius: var(--border-radius);
+}
+
+.good-file-color, .fa-check {
+    color: #4ade45;
+}
+
+.bad-file-color, .fa-skull {
+    color: #de454a;
+}
+
+.flexbox-space-between {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+#file-scroller {
+    display: flex;
+    flex-direction: column;
+    width: 250px;
+    max-height: 50%;
+    overflow-y: auto;
+}
+
+.main {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin-left: 20px;
+    margin-right: 20px;
+    width: 410px;
+}
+
+#file-scroller * {
+    border-radius: 0;
+}
+
+#file-scroller *:first-child {
+    border-radius: 0 var(--border-radius) 0 0;
+    text-align: center;
+}
+
+#file-scroller *:last-child {
+    border-radius: 0 0 var(--border-radius) 0
+}
+
+.file-scroller-entry {
+    padding: 10px;
+    min-height: 20px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.file-scroller-upload-button {
+    justify-content: center;
+}
+
+.file-scroller-upload-button *:first-child {
+    margin-right: 10px;
+}
+
+.ellipsis-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.file-input-button {
+    cursor: pointer;
+    position: relative;
+    background-color: var(--blue-color);
+    font-weight: bold;
+    color: white;
+    transition: background-color var(--button-transition-time), box-shadow var(--button-transition-time), color var(--button-transition-time), transform var(--button-transition-time);
+    border: var(--border);
+    border-radius: 0 var(--border-radius) var(--border-radius) 0;
+}
+
+.file-input-button:hover, .button-selected {
+    box-shadow: var(--button-drop-shadow-size) var(--button-drop-shadow-size) 0 var(--button-drop-shadow-size) var(--dark-gray-color);
+    transform: translate(var(--button-hover-offset), var(--button-hover-offset));
+    color: black;
+    background-color: white;
+}
+
+#file-scroller::-webkit-scrollbar {
+    width: 20px;
+}
+
+#file-scroller::-webkit-scrollbar-track {
+    background-color: transparent;
+}
+
+#file-scroller::-webkit-scrollbar-thumb {
+    background-color: var(--gray-color);
+    border-radius: 20px;
+    border: 6px solid transparent;
+    background-clip: content-box;
+}
+
+#file-scroller::-webkit-scrollbar-thumb:hover {
+    background-color: #acb7c1;
+}
+
+.bold {
+    font-weight: bold;
+}
+
+.fa-1em {
+    font-size: 1em;
+}
+
+li {
+    list-style: circle;
+    margin-left: 25px;
+}
+
+.mb-s {
+    margin-bottom: 8px;
+}
+
+.sneaky, .keyword-description {
+    opacity: 0.5;
+}
+
+.keyword-description {
+    margin-left: 12px;
+}
+
+.list-flex-sb {
+    display: inline-flex;
+    width: calc(100% - 25px); /* 25px is a margin-left of a list item */
+    flex-direction: row;
+    justify-content: space-between;
+}

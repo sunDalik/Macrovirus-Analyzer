@@ -36,8 +36,11 @@ chrome.downloads.onChanged.addListener((e) => {
         if (["doc", "docm", "xls", "xlsm"].includes(extension)) {
             console.log("Has correct extension!");
             downloadsCache.push({id: e.id, filename: e.filename.current});
+
+            if (downloadsCache.length > 100) {
+                downloadsCache.shift();
+            }
         }
-        //TODO remove downloadsCache entries when there are too many of them
     } else if (e.state && e.state.current === "complete") {
         console.log("Has completed!");
         const cacheEntry = downloadsCache.find(cacheEntry => cacheEntry.id === e.id);
@@ -45,8 +48,11 @@ chrome.downloads.onChanged.addListener((e) => {
         const file = {id: e.id, filename: cacheEntry.filename, analysis: "", isMalicious: false};
         filesList.push(file);
         processFile(file);
+
+        if (filesList > 10) {
+            filesList.shift();
+        }
         updateFileList();
-        //TODO remove file entries when there are too many of them
     }
 });
 
