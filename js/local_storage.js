@@ -9,7 +9,7 @@ export const SETTINGS = Object.freeze({
         name: "Deobfuscate decompiled p-code",
         defaultValue: false
     },
-    deobfuscateStrings: {key: "deobfuscateStrings", name: "Deobfuscate Chr", defaultValue: true},
+    deobfuscateStrings: {key: "deobfuscateStrings", name: "Deobfuscate Chr, Asc", defaultValue: true},
 
     showSourceCode: {key: "showSourceCode", name: "--", defaultValue: true},
     showPCode: {key: "showPCode", name: "--", defaultValue: false},

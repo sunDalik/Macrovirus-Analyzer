@@ -1,6 +1,6 @@
 import {readSetting, SETTINGS} from "./local_storage";
 import {isAutoExec} from "./analysis";
-import {Chr} from "./vba_functions";
+import {Asc, Chr} from "./vba_functions";
 
 const varName = "[A-Za-z][A-Za-z0-9_\-]*";
 
@@ -241,6 +241,11 @@ function deobfuscateStrings(code) {
             const arg = Number(groups.args);
             if (Number.isNaN(arg)) return match;
             else return "\"" + Chr(arg).toString() + "\"";
+        });
+        codeLines[i] = codeLines[i].replace(funcCallRegex("Asc"), (match, p1, offset, string, groups) => {
+            const arg = groups.args;
+            if (arg[0] === "\"" && arg[arg.length - 1] === "\"") return Asc(arg).toString();
+            else return match;
         });
     }
     return codeLines.join("\n");
