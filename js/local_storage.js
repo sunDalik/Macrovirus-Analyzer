@@ -9,6 +9,7 @@ export const SETTINGS = Object.freeze({
         name: "Deobfuscate decompiled p-code",
         defaultValue: false
     },
+    deobfuscateStrings: {key: "deobfuscateStrings", name: "Deobfuscate Chr", defaultValue: true},
 
     showSourceCode: {key: "showSourceCode", name: "--", defaultValue: true},
     showPCode: {key: "showPCode", name: "--", defaultValue: false},
@@ -18,7 +19,8 @@ export const SETTINGS = Object.freeze({
 export const DEOBFUSCATION_SETTINGS = [SETTINGS.renameVariables,
     SETTINGS.removeDeadCode,
     SETTINGS.removeComments,
-    SETTINGS.deobfuscateDecompiledPCode];
+    SETTINGS.deobfuscateDecompiledPCode,
+    SETTINGS.deobfuscateStrings];
 
 export function setupLocalStorage(reset = false) {
     if (!window.localStorage[STORAGE_SETTINGS] || reset) {

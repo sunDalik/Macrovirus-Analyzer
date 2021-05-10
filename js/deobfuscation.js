@@ -1,5 +1,6 @@
 import {readSetting, SETTINGS} from "./local_storage";
 import {isAutoExec} from "./analysis";
+import {Chr} from "./vba_functions";
 
 const varName = "[A-Za-z][A-Za-z0-9_\-]*";
 
@@ -11,6 +12,10 @@ export const keywordRegex = (keyword, i = false) => {
     return new RegExp(`^(?<before>(?:[^"]*?"[^"]*?")*?[^"]*?)\\b${keyword}\\b`, flags);
 };
 
+export const funcCallRegex = (funcName) => {
+    return new RegExp(`\\b${funcName}[ \\t]*\\((?<args>.*?)\\)`, "gi");
+};
+
 export const stringRegex = (str, i = false) => {
     let flags = "g";
     if (i) flags += "i";
@@ -18,8 +23,6 @@ export const stringRegex = (str, i = false) => {
 };
 
 export const dllDeclarationRegex = new RegExp(`^[ \\t]*((Public|Private)[ \\t]+)?Declare[ \\t]+(Sub|Function)[ \\t]+(?<functionName>${varName})`);
-
-const forRegex = new RegExp(`^[ \\t]*For[ \\t]+(?<iteratorVariable>${varName})[ \\t]*=[ \\t]*$`);
 
 const variableDeclarationRegex = new RegExp(`(^[ \\t]*(Set|Dim)[ \\t]+(?<variableName>${varName}).*?$)|(^[ \\t]*(?<variableName2>${varName})([ \\t]*\\(.+?\\))?[ \\t]*=.*?$)`);
 const fullLineCommentRegex = new RegExp(`^[ \\t]*'.*`);
@@ -47,6 +50,7 @@ export function deobfuscateCode(code) {
     deobfuscatedCode = removeColonDelimiters(deobfuscatedCode);
     if (readSetting(SETTINGS.removeDeadCode)) deobfuscatedCode = removeDeadCode(deobfuscatedCode);
     if (readSetting(SETTINGS.renameVariables)) deobfuscatedCode = renameVariables(deobfuscatedCode);
+    if (readSetting(SETTINGS.deobfuscateStrings)) deobfuscatedCode = deobfuscateStrings(deobfuscatedCode);
     deobfuscatedCode = indentCode(deobfuscatedCode);
     return deobfuscatedCode;
 }
@@ -224,16 +228,20 @@ function removeUnusedVariables(code) {
     return codeLines.join("\n");
 }
 
-function logicalAnalysis(code) {
-    const codeLines = code.split("\n");
-    const resultCode = "";
-    const stack = [];
-    const variables = {};
-    for (const line of codeLines) {
-        if (functionDeclarationRegex.test(line)) {
-            const groups = line.match(functionDeclarationRegex).groups;
-            stack.push(groups.functionName);
-        }
+// TODO very very bad. Can find functions inside strings and doesnt support nested functions
+function deobfuscateStrings(code) {
+    let codeLines = code.split("\n");
+    for (let i = 0; i < codeLines.length; i++) {
+        codeLines[i] = codeLines[i].replace(funcCallRegex("Chr"), (match, p1, offset, string, groups) => {
+            const arg = Number(groups.args);
+            if (Number.isNaN(arg)) return match;
+            else return "\"" + Chr(arg).toString() + "\"";
+        });
+        codeLines[i] = codeLines[i].replace(funcCallRegex("ChrW"), (match, p1, offset, string, groups) => {
+            const arg = Number(groups.args);
+            if (Number.isNaN(arg)) return match;
+            else return "\"" + Chr(arg).toString() + "\"";
+        });
     }
-    return resultCode;
+    return codeLines.join("\n");
 }
