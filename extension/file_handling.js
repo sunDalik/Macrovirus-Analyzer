@@ -15,6 +15,22 @@ export function processFile(file) {
             const oleFile = new OLEFile(contents);
             file.analysis = analyzeFile(oleFile);
             file.isMalicious = oleFile.isMalicious;
+            console.log("Finished analysis");
+            if (file.isMalicious) {
+                console.log("Malicious");
+                const splitFilename = file.filename.split("\\");
+                const filename = splitFilename[splitFilename.length - 1];
+                chrome.notifications.create(
+                    {
+                        type: "basic",
+                        iconUrl: "icon.png",
+                        title: "Security warning!",
+                        message: "File " + filename + " is malicious!"
+                    },
+                    function () {
+                    }
+                );
+            }
             updateFileList();
         };
 

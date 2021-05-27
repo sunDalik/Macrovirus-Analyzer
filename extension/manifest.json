@@ -13,7 +13,8 @@
   "permissions": [
     "storage",
     "downloads",
-    "file://*/*"
+    "file://*/*",
+    "notifications"
   ],
   "browser_action": {
     "default_popup": "popup.html"
